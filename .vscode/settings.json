@@ -24,6 +24,7 @@
   "python.analysis.typeCheckingMode": "basic",
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": true,
+  "python.defaultInterpreterPath": "/opt/homebrew/Caskroom/miniconda/base/envs/metta/bin/python",
   "[yaml]": {
     "editor.insertSpaces": true,
     "editor.tabSize": 2,

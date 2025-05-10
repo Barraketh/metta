@@ -16,6 +16,7 @@ setup: |
 
   ./devops/checkout_and_build.sh
   mkdir -p $WANDB_DIR
+  mkdir train_dir
 
 run: |
   cd /workspace/metta
@@ -40,10 +41,10 @@ file_mounts:
     source: s3://softmax-public
     mode: MOUNT
 
-  /workspace/metta/train_dir:
-    name: train-dir
-    store: s3
-    mode: MOUNT
+  # /workspace/metta/train_dir:
+  #   name: train-dir
+  #   store: s3
+  #   mode: MOUNT
 
 envs:
   METTA_RUN_ID:
