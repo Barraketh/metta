@@ -1,0 +1,60 @@
+# @package __global__
+
+defaults:
+  - override /sim: simple
+  - _self_
+
+device: cpu
+
+trainer:
+  env: /env/mettagrid/simple
+  num_workers: 2
+  evaluate_interval: 200
+  optimizer:
+    type: muon
+  env_overrides:
+    sampling: 0.7
+    game:
+      num_agents: 36
+      max_steps: 1000
+
+eval_db_uri: ${run_dir}/eval_stats
+
+analyzer:
+  policy_uri: ${..policy_uri}
+  view_type: latest
+  analysis:
+    metrics:
+      - metric: episode_reward
+      - metric: "heart.get"
+
+sim:
+  env: /env/mettagrid/puffer
+  num_envs: 1
+  num_episodes: 1
+  max_time_s: 600
+  # policy_agents_pct: 1
+
+  # env: /env/mettagrid/reward_dr
+  # env_overrides:
+  #   # sampling: 0.7
+  #   game:
+  #     num_agents: 16
+  #     max_steps: 1000
+  #     map_builder:
+  #       room:
+  #         agents: 4
+  #       num_rooms: 4
+
+wandb:
+  checkpoint_interval: 1
+
+run_id: 21
+run: ${oc.env:USER}.local.${run_id}
+trained_policy_uri: ${run_dir}/checkpoints
+# trained_policy_uri: /Users/dffarr/Downloads/model.pt
+# policy_uri: ${trained_policy_uri}
+
+sweep_params: "sweep/fast"
+sweep_name: "${oc.env:USER}.local.sweep.${run_id}"
+seed: null
