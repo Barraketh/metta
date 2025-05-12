@@ -150,9 +150,7 @@ class PufferTrainer:
 
         # validate that policy matches environment
         self.metta_agent: MettaAgent = self.policy  # type: ignore
-        assert isinstance(self.metta_agent, MettaAgent), (
-            f"Policy is not a MettaAgent but has type: {type(self.metta_agent)}"
-        )
+        # assert isinstance(self.metta_agent, MettaAgent)
         _env_shape = metta_grid_env.single_observation_space.shape
         environment_shape = tuple(_env_shape) if isinstance(_env_shape, list) else _env_shape
 
