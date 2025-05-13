@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Policy Evaluation Report: episode_reward</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+body{
+  font-family:Arial, sans-serif;margin:0;padding:20px;background:#f8f9fa;
+}
+.container{
+  max-width:1200px;margin:0 auto;background:#fff;padding:20px;border-radius:5px;
+  box-shadow:0 2px 4px rgba(0,0,0,.1);
+}
+h1{color:#333;border-bottom:1px solid #ddd;padding-bottom:10px}
+
+.map-viewer {
+    position: relative;
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+    min-height: 300px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.map-viewer-title {
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    font-size: 18px;
+}
+.map-viewer-img {
+    max-width: 100%;
+    max-height: 350px;
+    display: block;
+    margin: 0 auto;
+}
+.map-viewer-placeholder {
+    text-align: center;
+    color: #666;
+    padding: 50px 0;
+    font-style: italic;
+}
+.map-viewer-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+    gap: 10px;
+}
+.map-button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+}
+.map-button svg {
+    width: 14px;
+    height: 14px;
+}
+.map-button.locked {
+    background: #f0f0f0;
+    border-color: #aaa;
+}
+.map-button:hover {
+    background: #f0f0f0;
+}
+.map-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Policy Evaluation Report: episode_reward</h1>
+    
+<!-- enable pointer events on axis labels and cells -->
+<style>
+  .xaxislayer-above .xtick text,
+  .yaxislayer-above .ytick text,
+  .heatmap .nsewdrag {
+      pointer-events: all !important;
+      cursor: pointer;
+  }
+  .clickable-cell {
+      cursor: pointer;
+  }
+</style>
+
+<div class="heatmap-wrapper">
+  <div id="heat_6524b9d5"></div>
+  
+  
+<!-- Map Viewer Panel -->
+<div class="map-viewer" id="heat_6524b9d5_map">
+  <div class="map-viewer-title" id="heat_6524b9d5_map_title">Map Viewer</div>
+  <div class="map-viewer-placeholder" id="heat_6524b9d5_map_placeholder">
+    Hover over an evaluation name or cell to see the environment map
+  </div>
+  <img class="map-viewer-img" id="heat_6524b9d5_map_img" alt="Environment map" style="display: none;">
+  
+  <div class="map-viewer-controls">
+    <button id="heat_6524b9d5_lock_button" class="map-button" title="Lock current view (or click cell)">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 
+        2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" 
+        clip-rule="evenodd" />
+      </svg>
+      <span>Lock View</span>
+    </button>
+    <button id="heat_6524b9d5_replay_button" class="map-button disabled" title="Open replay in Mettascope">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 
+        00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 
+        0 014.25 4h5a.75.75 0 010 1.5h-5z" clip-rule="evenodd" />
+        <path fill-rule="evenodd" d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5
+          0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.194a.75.75 0 00-.053 1.06z" 
+          clip-rule="evenodd" />
+      </svg>
+      <span>Open Replay</span>
+    </button>
+  </div>
+</div>
+
+</div>
+
+<script>
+(function() {
+  const fig = {"data": [{"colorbar": {"title": {"text": "Score"}}, "colorscale": [[0.0, "rgb(235, 40, 40)"], [0.5, "rgb(235, 40, 40)"], [0.8, "rgb(225,210,80)"], [0.95, "rgb(195,230,80)"], [1.0, "rgb(20, 230, 80)"]], "customdata": [[{"img": "", "shortName": "Overall", "fullName": "Overall"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/corridors.png", "shortName": "corridors", "fullName": "navigation/corridors"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder.png", "shortName": "cylinder", "fullName": "navigation/cylinder"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder_easy.png", "shortName": "cylinder_easy", "fullName": "navigation/cylinder_easy"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_outofsight.png", "shortName": "emptyspace_outofsight", "fullName": "navigation/emptyspace_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_sparse.png", "shortName": "emptyspace_sparse", "fullName": "navigation/emptyspace_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_withinsight.png", "shortName": "emptyspace_withinsight", "fullName": "navigation/emptyspace_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/honeypot.png", "shortName": "honeypot", "fullName": "navigation/honeypot"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/knotty.png", "shortName": "knotty", "fullName": "navigation/knotty"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/labyrinth.png", "shortName": "labyrinth", "fullName": "navigation/labyrinth"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/memory_palace.png", "shortName": "memory_palace", "fullName": "navigation/memory_palace"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles0.png", "shortName": "obstacles0", "fullName": "navigation/obstacles0"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles1.png", "shortName": "obstacles1", "fullName": "navigation/obstacles1"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles2.png", "shortName": "obstacles2", "fullName": "navigation/obstacles2"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles3.png", "shortName": "obstacles3", "fullName": "navigation/obstacles3"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_mini.png", "shortName": "radial_mini", "fullName": "navigation/radial_mini"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_small.png", "shortName": "radial_small", "fullName": "navigation/radial_small"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radialmaze.png", "shortName": "radialmaze", "fullName": "navigation/radialmaze"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/swirls.png", "shortName": "swirls", "fullName": "navigation/swirls"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/thecube.png", "shortName": "thecube", "fullName": "navigation/thecube"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walkaround.png", "shortName": "walkaround", "fullName": "navigation/walkaround"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_outofsight.png", "shortName": "walls_outofsight", "fullName": "navigation/walls_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_sparse.png", "shortName": "walls_sparse", "fullName": "navigation/walls_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_withinsight.png", "shortName": "walls_withinsight", "fullName": "navigation/walls_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/wanderout.png", "shortName": "wanderout", "fullName": "navigation/wanderout"}], [{"img": "", "shortName": "Overall", "fullName": "Overall"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/corridors.png", "shortName": "corridors", "fullName": "navigation/corridors"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder.png", "shortName": "cylinder", "fullName": "navigation/cylinder"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder_easy.png", "shortName": "cylinder_easy", "fullName": "navigation/cylinder_easy"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_outofsight.png", "shortName": "emptyspace_outofsight", "fullName": "navigation/emptyspace_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_sparse.png", "shortName": "emptyspace_sparse", "fullName": "navigation/emptyspace_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_withinsight.png", "shortName": "emptyspace_withinsight", "fullName": "navigation/emptyspace_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/honeypot.png", "shortName": "honeypot", "fullName": "navigation/honeypot"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/knotty.png", "shortName": "knotty", "fullName": "navigation/knotty"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/labyrinth.png", "shortName": "labyrinth", "fullName": "navigation/labyrinth"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/memory_palace.png", "shortName": "memory_palace", "fullName": "navigation/memory_palace"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles0.png", "shortName": "obstacles0", "fullName": "navigation/obstacles0"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles1.png", "shortName": "obstacles1", "fullName": "navigation/obstacles1"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles2.png", "shortName": "obstacles2", "fullName": "navigation/obstacles2"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles3.png", "shortName": "obstacles3", "fullName": "navigation/obstacles3"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_mini.png", "shortName": "radial_mini", "fullName": "navigation/radial_mini"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_small.png", "shortName": "radial_small", "fullName": "navigation/radial_small"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radialmaze.png", "shortName": "radialmaze", "fullName": "navigation/radialmaze"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/swirls.png", "shortName": "swirls", "fullName": "navigation/swirls"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/thecube.png", "shortName": "thecube", "fullName": "navigation/thecube"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walkaround.png", "shortName": "walkaround", "fullName": "navigation/walkaround"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_outofsight.png", "shortName": "walls_outofsight", "fullName": "navigation/walls_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_sparse.png", "shortName": "walls_sparse", "fullName": "navigation/walls_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_withinsight.png", "shortName": "walls_withinsight", "fullName": "navigation/walls_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/wanderout.png", "shortName": "wanderout", "fullName": "navigation/wanderout"}], [{"img": "", "shortName": "Overall", "fullName": "Overall"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/corridors.png", "shortName": "corridors", "fullName": "navigation/corridors"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder.png", "shortName": "cylinder", "fullName": "navigation/cylinder"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder_easy.png", "shortName": "cylinder_easy", "fullName": "navigation/cylinder_easy"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_outofsight.png", "shortName": "emptyspace_outofsight", "fullName": "navigation/emptyspace_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_sparse.png", "shortName": "emptyspace_sparse", "fullName": "navigation/emptyspace_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_withinsight.png", "shortName": "emptyspace_withinsight", "fullName": "navigation/emptyspace_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/honeypot.png", "shortName": "honeypot", "fullName": "navigation/honeypot"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/knotty.png", "shortName": "knotty", "fullName": "navigation/knotty"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/labyrinth.png", "shortName": "labyrinth", "fullName": "navigation/labyrinth"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/memory_palace.png", "shortName": "memory_palace", "fullName": "navigation/memory_palace"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles0.png", "shortName": "obstacles0", "fullName": "navigation/obstacles0"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles1.png", "shortName": "obstacles1", "fullName": "navigation/obstacles1"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles2.png", "shortName": "obstacles2", "fullName": "navigation/obstacles2"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles3.png", "shortName": "obstacles3", "fullName": "navigation/obstacles3"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_mini.png", "shortName": "radial_mini", "fullName": "navigation/radial_mini"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_small.png", "shortName": "radial_small", "fullName": "navigation/radial_small"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radialmaze.png", "shortName": "radialmaze", "fullName": "navigation/radialmaze"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/swirls.png", "shortName": "swirls", "fullName": "navigation/swirls"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/thecube.png", "shortName": "thecube", "fullName": "navigation/thecube"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walkaround.png", "shortName": "walkaround", "fullName": "navigation/walkaround"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_outofsight.png", "shortName": "walls_outofsight", "fullName": "navigation/walls_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_sparse.png", "shortName": "walls_sparse", "fullName": "navigation/walls_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_withinsight.png", "shortName": "walls_withinsight", "fullName": "navigation/walls_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/wanderout.png", "shortName": "wanderout", "fullName": "navigation/wanderout"}], [{"img": "", "shortName": "Overall", "fullName": "Overall"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/corridors.png", "shortName": "corridors", "fullName": "navigation/corridors"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder.png", "shortName": "cylinder", "fullName": "navigation/cylinder"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder_easy.png", "shortName": "cylinder_easy", "fullName": "navigation/cylinder_easy"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_outofsight.png", "shortName": "emptyspace_outofsight", "fullName": "navigation/emptyspace_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_sparse.png", "shortName": "emptyspace_sparse", "fullName": "navigation/emptyspace_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_withinsight.png", "shortName": "emptyspace_withinsight", "fullName": "navigation/emptyspace_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/honeypot.png", "shortName": "honeypot", "fullName": "navigation/honeypot"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/knotty.png", "shortName": "knotty", "fullName": "navigation/knotty"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/labyrinth.png", "shortName": "labyrinth", "fullName": "navigation/labyrinth"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/memory_palace.png", "shortName": "memory_palace", "fullName": "navigation/memory_palace"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles0.png", "shortName": "obstacles0", "fullName": "navigation/obstacles0"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles1.png", "shortName": "obstacles1", "fullName": "navigation/obstacles1"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles2.png", "shortName": "obstacles2", "fullName": "navigation/obstacles2"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles3.png", "shortName": "obstacles3", "fullName": "navigation/obstacles3"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_mini.png", "shortName": "radial_mini", "fullName": "navigation/radial_mini"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_small.png", "shortName": "radial_small", "fullName": "navigation/radial_small"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radialmaze.png", "shortName": "radialmaze", "fullName": "navigation/radialmaze"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/swirls.png", "shortName": "swirls", "fullName": "navigation/swirls"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/thecube.png", "shortName": "thecube", "fullName": "navigation/thecube"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walkaround.png", "shortName": "walkaround", "fullName": "navigation/walkaround"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_outofsight.png", "shortName": "walls_outofsight", "fullName": "navigation/walls_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_sparse.png", "shortName": "walls_sparse", "fullName": "navigation/walls_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_withinsight.png", "shortName": "walls_withinsight", "fullName": "navigation/walls_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/wanderout.png", "shortName": "wanderout", "fullName": "navigation/wanderout"}], [{"img": "", "shortName": "Overall", "fullName": "Overall"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/corridors.png", "shortName": "corridors", "fullName": "navigation/corridors"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder.png", "shortName": "cylinder", "fullName": "navigation/cylinder"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder_easy.png", "shortName": "cylinder_easy", "fullName": "navigation/cylinder_easy"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_outofsight.png", "shortName": "emptyspace_outofsight", "fullName": "navigation/emptyspace_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_sparse.png", "shortName": "emptyspace_sparse", "fullName": "navigation/emptyspace_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_withinsight.png", "shortName": "emptyspace_withinsight", "fullName": "navigation/emptyspace_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/honeypot.png", "shortName": "honeypot", "fullName": "navigation/honeypot"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/knotty.png", "shortName": "knotty", "fullName": "navigation/knotty"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/labyrinth.png", "shortName": "labyrinth", "fullName": "navigation/labyrinth"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/memory_palace.png", "shortName": "memory_palace", "fullName": "navigation/memory_palace"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles0.png", "shortName": "obstacles0", "fullName": "navigation/obstacles0"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles1.png", "shortName": "obstacles1", "fullName": "navigation/obstacles1"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles2.png", "shortName": "obstacles2", "fullName": "navigation/obstacles2"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles3.png", "shortName": "obstacles3", "fullName": "navigation/obstacles3"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_mini.png", "shortName": "radial_mini", "fullName": "navigation/radial_mini"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_small.png", "shortName": "radial_small", "fullName": "navigation/radial_small"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radialmaze.png", "shortName": "radialmaze", "fullName": "navigation/radialmaze"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/swirls.png", "shortName": "swirls", "fullName": "navigation/swirls"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/thecube.png", "shortName": "thecube", "fullName": "navigation/thecube"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walkaround.png", "shortName": "walkaround", "fullName": "navigation/walkaround"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_outofsight.png", "shortName": "walls_outofsight", "fullName": "navigation/walls_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_sparse.png", "shortName": "walls_sparse", "fullName": "navigation/walls_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_withinsight.png", "shortName": "walls_withinsight", "fullName": "navigation/walls_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/wanderout.png", "shortName": "wanderout", "fullName": "navigation/wanderout"}], [{"img": "", "shortName": "Overall", "fullName": "Overall"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/corridors.png", "shortName": "corridors", "fullName": "navigation/corridors"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder.png", "shortName": "cylinder", "fullName": "navigation/cylinder"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder_easy.png", "shortName": "cylinder_easy", "fullName": "navigation/cylinder_easy"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_outofsight.png", "shortName": "emptyspace_outofsight", "fullName": "navigation/emptyspace_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_sparse.png", "shortName": "emptyspace_sparse", "fullName": "navigation/emptyspace_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_withinsight.png", "shortName": "emptyspace_withinsight", "fullName": "navigation/emptyspace_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/honeypot.png", "shortName": "honeypot", "fullName": "navigation/honeypot"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/knotty.png", "shortName": "knotty", "fullName": "navigation/knotty"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/labyrinth.png", "shortName": "labyrinth", "fullName": "navigation/labyrinth"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/memory_palace.png", "shortName": "memory_palace", "fullName": "navigation/memory_palace"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles0.png", "shortName": "obstacles0", "fullName": "navigation/obstacles0"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles1.png", "shortName": "obstacles1", "fullName": "navigation/obstacles1"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles2.png", "shortName": "obstacles2", "fullName": "navigation/obstacles2"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles3.png", "shortName": "obstacles3", "fullName": "navigation/obstacles3"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_mini.png", "shortName": "radial_mini", "fullName": "navigation/radial_mini"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_small.png", "shortName": "radial_small", "fullName": "navigation/radial_small"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radialmaze.png", "shortName": "radialmaze", "fullName": "navigation/radialmaze"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/swirls.png", "shortName": "swirls", "fullName": "navigation/swirls"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/thecube.png", "shortName": "thecube", "fullName": "navigation/thecube"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walkaround.png", "shortName": "walkaround", "fullName": "navigation/walkaround"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_outofsight.png", "shortName": "walls_outofsight", "fullName": "navigation/walls_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_sparse.png", "shortName": "walls_sparse", "fullName": "navigation/walls_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_withinsight.png", "shortName": "walls_withinsight", "fullName": "navigation/walls_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/wanderout.png", "shortName": "wanderout", "fullName": "navigation/wanderout"}], [{"img": "", "shortName": "Overall", "fullName": "Overall"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/corridors.png", "shortName": "corridors", "fullName": "navigation/corridors"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder.png", "shortName": "cylinder", "fullName": "navigation/cylinder"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder_easy.png", "shortName": "cylinder_easy", "fullName": "navigation/cylinder_easy"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_outofsight.png", "shortName": "emptyspace_outofsight", "fullName": "navigation/emptyspace_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_sparse.png", "shortName": "emptyspace_sparse", "fullName": "navigation/emptyspace_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_withinsight.png", "shortName": "emptyspace_withinsight", "fullName": "navigation/emptyspace_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/honeypot.png", "shortName": "honeypot", "fullName": "navigation/honeypot"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/knotty.png", "shortName": "knotty", "fullName": "navigation/knotty"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/labyrinth.png", "shortName": "labyrinth", "fullName": "navigation/labyrinth"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/memory_palace.png", "shortName": "memory_palace", "fullName": "navigation/memory_palace"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles0.png", "shortName": "obstacles0", "fullName": "navigation/obstacles0"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles1.png", "shortName": "obstacles1", "fullName": "navigation/obstacles1"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles2.png", "shortName": "obstacles2", "fullName": "navigation/obstacles2"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles3.png", "shortName": "obstacles3", "fullName": "navigation/obstacles3"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_mini.png", "shortName": "radial_mini", "fullName": "navigation/radial_mini"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_small.png", "shortName": "radial_small", "fullName": "navigation/radial_small"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radialmaze.png", "shortName": "radialmaze", "fullName": "navigation/radialmaze"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/swirls.png", "shortName": "swirls", "fullName": "navigation/swirls"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/thecube.png", "shortName": "thecube", "fullName": "navigation/thecube"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walkaround.png", "shortName": "walkaround", "fullName": "navigation/walkaround"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_outofsight.png", "shortName": "walls_outofsight", "fullName": "navigation/walls_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_sparse.png", "shortName": "walls_sparse", "fullName": "navigation/walls_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_withinsight.png", "shortName": "walls_withinsight", "fullName": "navigation/walls_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/wanderout.png", "shortName": "wanderout", "fullName": "navigation/wanderout"}], [{"img": "", "shortName": "Overall", "fullName": "Overall"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/corridors.png", "shortName": "corridors", "fullName": "navigation/corridors"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder.png", "shortName": "cylinder", "fullName": "navigation/cylinder"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder_easy.png", "shortName": "cylinder_easy", "fullName": "navigation/cylinder_easy"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_outofsight.png", "shortName": "emptyspace_outofsight", "fullName": "navigation/emptyspace_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_sparse.png", "shortName": "emptyspace_sparse", "fullName": "navigation/emptyspace_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_withinsight.png", "shortName": "emptyspace_withinsight", "fullName": "navigation/emptyspace_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/honeypot.png", "shortName": "honeypot", "fullName": "navigation/honeypot"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/knotty.png", "shortName": "knotty", "fullName": "navigation/knotty"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/labyrinth.png", "shortName": "labyrinth", "fullName": "navigation/labyrinth"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/memory_palace.png", "shortName": "memory_palace", "fullName": "navigation/memory_palace"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles0.png", "shortName": "obstacles0", "fullName": "navigation/obstacles0"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles1.png", "shortName": "obstacles1", "fullName": "navigation/obstacles1"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles2.png", "shortName": "obstacles2", "fullName": "navigation/obstacles2"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles3.png", "shortName": "obstacles3", "fullName": "navigation/obstacles3"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_mini.png", "shortName": "radial_mini", "fullName": "navigation/radial_mini"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_small.png", "shortName": "radial_small", "fullName": "navigation/radial_small"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radialmaze.png", "shortName": "radialmaze", "fullName": "navigation/radialmaze"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/swirls.png", "shortName": "swirls", "fullName": "navigation/swirls"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/thecube.png", "shortName": "thecube", "fullName": "navigation/thecube"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walkaround.png", "shortName": "walkaround", "fullName": "navigation/walkaround"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_outofsight.png", "shortName": "walls_outofsight", "fullName": "navigation/walls_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_sparse.png", "shortName": "walls_sparse", "fullName": "navigation/walls_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_withinsight.png", "shortName": "walls_withinsight", "fullName": "navigation/walls_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/wanderout.png", "shortName": "wanderout", "fullName": "navigation/wanderout"}], [{"img": "", "shortName": "Overall", "fullName": "Overall"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/corridors.png", "shortName": "corridors", "fullName": "navigation/corridors"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder.png", "shortName": "cylinder", "fullName": "navigation/cylinder"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder_easy.png", "shortName": "cylinder_easy", "fullName": "navigation/cylinder_easy"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_outofsight.png", "shortName": "emptyspace_outofsight", "fullName": "navigation/emptyspace_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_sparse.png", "shortName": "emptyspace_sparse", "fullName": "navigation/emptyspace_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_withinsight.png", "shortName": "emptyspace_withinsight", "fullName": "navigation/emptyspace_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/honeypot.png", "shortName": "honeypot", "fullName": "navigation/honeypot"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/knotty.png", "shortName": "knotty", "fullName": "navigation/knotty"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/labyrinth.png", "shortName": "labyrinth", "fullName": "navigation/labyrinth"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/memory_palace.png", "shortName": "memory_palace", "fullName": "navigation/memory_palace"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles0.png", "shortName": "obstacles0", "fullName": "navigation/obstacles0"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles1.png", "shortName": "obstacles1", "fullName": "navigation/obstacles1"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles2.png", "shortName": "obstacles2", "fullName": "navigation/obstacles2"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles3.png", "shortName": "obstacles3", "fullName": "navigation/obstacles3"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_mini.png", "shortName": "radial_mini", "fullName": "navigation/radial_mini"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_small.png", "shortName": "radial_small", "fullName": "navigation/radial_small"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radialmaze.png", "shortName": "radialmaze", "fullName": "navigation/radialmaze"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/swirls.png", "shortName": "swirls", "fullName": "navigation/swirls"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/thecube.png", "shortName": "thecube", "fullName": "navigation/thecube"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walkaround.png", "shortName": "walkaround", "fullName": "navigation/walkaround"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_outofsight.png", "shortName": "walls_outofsight", "fullName": "navigation/walls_outofsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_sparse.png", "shortName": "walls_sparse", "fullName": "navigation/walls_sparse"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_withinsight.png", "shortName": "walls_withinsight", "fullName": "navigation/walls_withinsight"}, {"img": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/wanderout.png", "shortName": "wanderout", "fullName": "navigation/wanderout"}]], "hovertemplate": "<b>Policy:</b> %{y}<br><b>Evaluation:</b> %{customdata.fullName}<br><b>Score:</b> %{z:.2f}<extra></extra>", "x": ["Overall", "corridors", "cylinder", "cylinder_easy", "emptyspace_outofsight", "emptyspace_sparse", "emptyspace_withinsight", "honeypot", "knotty", "labyrinth", "memory_palace", "obstacles0", "obstacles1", "obstacles2", "obstacles3", "radial_mini", "radial_small", "radialmaze", "swirls", "thecube", "walkaround", "walls_outofsight", "walls_sparse", "walls_withinsight", "wanderout"], "y": ["Mean", "Max", "b.daphne.navigation_multiagent_48_rewardsharing_maxinv:v140", "b.daphne.navigation_multiagent_24_rewardsharing_maxinv:v65", "b.daphne.navigation_multiagent_48_norewardsharing_maxinv:v126", "b.daphne.navigation_multiagent_24_norewardsharing_maxinv:v186", "b.daphne.navigation2:v60", "b.daphne.navigation:v75", "daphne.navigation:v127"], "z": [[0.8496455466640845, 0.9133714403424945, 0.949050012230873, 0.958564298067774, 0.9038571545055935, 0.8681785826172149, 0.9775928697415761, 0.7540071525744029, 0.7373571523598262, 0.7968214388404575, 0.813471439055034, 0.9442928693124226, 0.9657000124454499, 0.7730357242482049, 0.880071439913341, 0.5185285781111035, 0.8229857248919351, 0.9514285836900983, 0.7611428669520788, 0.6897857231753213, 0.861042868239539, 0.9300214405570711, 0.9442928693124226, 0.9728357268231255, 0.7040571519306728], [0.9754125125706196, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.9657000124454498, 0.9990000128746033, 0.9990000128746033, 0.9823500126600265, 0.8991000115871429, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.9657000124454498, 0.9990000128746033, 0.9823500126600265, 0.9990000128746033, 0.9990000128746033, 0.9823500126600265, 0.9324000120162964, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.9490500122308732], [0.7464750096201896, 0.7992000102996826, 0.8824500113725662, 0.7659000098705292, 0.7326000094413757, 0.7992000102996826, 0.9157500118017197, 0.6493500083684921, 0.6993000090122223, 0.6993000090122223, 0.6160500079393387, 0.8325000107288361, 0.9657000124454498, 0.6660000085830688, 0.8658000111579895, 0.3330000042915344, 0.6160500079393387, 0.9990000128746033, 0.7659000098705292, 0.44955000579357146, 0.6826500087976456, 0.8491500109434128, 0.8824500113725662, 0.8824500113725662, 0.5661000072956085], [0.7624312598258257, 0.9990000128746033, 0.8991000115871429, 0.9990000128746033, 0.9157500118017197, 0.8491500109434128, 0.9990000128746033, 0.49950000643730164, 0.6493500083684921, 0.7825500100851059, 0.6327000081539154, 0.9490500122308732, 0.9324000120162964, 0.6327000081539154, 0.6160500079393387, 0.3829500049352646, 0.6993000090122223, 0.9157500118017197, 0.5161500066518784, 0.5661000072956085, 0.9657000124454498, 0.8991000115871429, 0.9324000120162964, 0.9823500126600265, 0.0832500010728836], [0.7665937598794699, 0.8658000111579895, 0.9324000120162964, 0.9657000124454498, 0.8824500113725662, 0.7825500100851059, 0.9657000124454498, 0.5328000068664551, 0.3829500049352646, 0.8325000107288361, 0.6493500083684921, 0.9157500118017197, 0.9324000120162964, 0.7326000094413757, 0.8658000111579895, 0.26640000343322756, 0.6160500079393387, 0.9157500118017197, 0.6160500079393387, 0.7492500096559525, 0.6327000081539154, 0.8325000107288361, 0.9157500118017197, 0.9490500122308732, 0.6660000085830688], [0.7998937603086232, 0.8991000115871429, 0.9324000120162964, 0.9823500126600265, 0.7992000102996826, 0.7992000102996826, 0.9823500126600265, 0.7326000094413757, 0.6660000085830688, 0.6660000085830688, 0.8158500105142593, 0.9157500118017197, 0.9324000120162964, 0.6493500083684921, 0.9990000128746033, 0.033300000429153445, 0.8824500113725662, 0.8325000107288361, 0.6493500083684921, 0.4828500062227249, 0.7492500096559525, 0.9657000124454498, 0.8991000115871429, 0.9990000128746033, 0.9324000120162964], [0.9386437620967628, 0.8991000115871429, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.9490500122308732, 0.9823500126600265, 0.9823500126600265, 0.8158500105142593, 0.8991000115871429, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.8158500105142593, 0.8991000115871429, 0.6660000085830688, 0.9490500122308732, 0.9990000128746033, 0.9823500126600265, 0.8325000107288361, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.8658000111579895], [0.9580687623471021, 0.9657000124454498, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.9657000124454498, 0.9990000128746033, 0.8824500113725662, 0.9823500126600265, 0.8491500109434128, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.9490500122308732, 0.9490500122308732, 0.9657000124454498, 0.9990000128746033, 0.9990000128746033, 0.8325000107288361, 0.8158500105142593, 0.9990000128746033, 0.9990000128746033, 0.9823500126600265, 0.9990000128746033, 0.8658000111579895], [0.9754125125706196, 0.9657000124454498, 0.9990000128746033, 0.9990000128746033, 0.9990000128746033, 0.9324000120162964, 0.9990000128746033, 0.9990000128746033, 0.9657000124454498, 0.8491500109434128, 0.9823500126600265, 0.9990000128746033, 0.9990000128746033, 0.9657000124454498, 0.9657000124454498, 0.9823500126600265, 0.9990000128746033, 0.9990000128746033, 0.9657000124454498, 0.9324000120162964, 0.9990000128746033, 0.9657000124454498, 0.9990000128746033, 0.9990000128746033, 0.9490500122308732]], "zmax": 1, "zmin": 0, "type": "heatmap"}], "layout": {"template": {"data": {"histogram2dcontour": [{"type": "histogram2dcontour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "choropleth": [{"type": "choropleth", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "histogram2d": [{"type": "histogram2d", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "heatmap": [{"type": "heatmap", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "contourcarpet": [{"type": "contourcarpet", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "contour": [{"type": "contour", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "surface": [{"type": "surface", "colorbar": {"outlinewidth": 0, "ticks": ""}, "colorscale": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]]}], "mesh3d": [{"type": "mesh3d", "colorbar": {"outlinewidth": 0, "ticks": ""}}], "scatter": [{"fillpattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}, "type": "scatter"}], "parcoords": [{"type": "parcoords", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolargl": [{"type": "scatterpolargl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "bar": [{"error_x": {"color": "#2a3f5f"}, "error_y": {"color": "#2a3f5f"}, "marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "bar"}], "scattergeo": [{"type": "scattergeo", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterpolar": [{"type": "scatterpolar", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "histogram": [{"marker": {"pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "histogram"}], "scattergl": [{"type": "scattergl", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatter3d": [{"type": "scatter3d", "line": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermap": [{"type": "scattermap", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattermapbox": [{"type": "scattermapbox", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scatterternary": [{"type": "scatterternary", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "scattercarpet": [{"type": "scattercarpet", "marker": {"colorbar": {"outlinewidth": 0, "ticks": ""}}}], "carpet": [{"aaxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "baxis": {"endlinecolor": "#2a3f5f", "gridcolor": "white", "linecolor": "white", "minorgridcolor": "white", "startlinecolor": "#2a3f5f"}, "type": "carpet"}], "table": [{"cells": {"fill": {"color": "#EBF0F8"}, "line": {"color": "white"}}, "header": {"fill": {"color": "#C8D4E3"}, "line": {"color": "white"}}, "type": "table"}], "barpolar": [{"marker": {"line": {"color": "#E5ECF6", "width": 0.5}, "pattern": {"fillmode": "overlay", "size": 10, "solidity": 0.2}}, "type": "barpolar"}], "pie": [{"automargin": true, "type": "pie"}]}, "layout": {"autotypenumbers": "strict", "colorway": ["#636efa", "#EF553B", "#00cc96", "#ab63fa", "#FFA15A", "#19d3f3", "#FF6692", "#B6E880", "#FF97FF", "#FECB52"], "font": {"color": "#2a3f5f"}, "hovermode": "closest", "hoverlabel": {"align": "left"}, "paper_bgcolor": "white", "plot_bgcolor": "#E5ECF6", "polar": {"bgcolor": "#E5ECF6", "angularaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "radialaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "ternary": {"bgcolor": "#E5ECF6", "aaxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "baxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}, "caxis": {"gridcolor": "white", "linecolor": "white", "ticks": ""}}, "coloraxis": {"colorbar": {"outlinewidth": 0, "ticks": ""}}, "colorscale": {"sequential": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "sequentialminus": [[0.0, "#0d0887"], [0.1111111111111111, "#46039f"], [0.2222222222222222, "#7201a8"], [0.3333333333333333, "#9c179e"], [0.4444444444444444, "#bd3786"], [0.5555555555555556, "#d8576b"], [0.6666666666666666, "#ed7953"], [0.7777777777777778, "#fb9f3a"], [0.8888888888888888, "#fdca26"], [1.0, "#f0f921"]], "diverging": [[0, "#8e0152"], [0.1, "#c51b7d"], [0.2, "#de77ae"], [0.3, "#f1b6da"], [0.4, "#fde0ef"], [0.5, "#f7f7f7"], [0.6, "#e6f5d0"], [0.7, "#b8e186"], [0.8, "#7fbc41"], [0.9, "#4d9221"], [1, "#276419"]]}, "xaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "yaxis": {"gridcolor": "white", "linecolor": "white", "ticks": "", "title": {"standoff": 15}, "zerolinecolor": "white", "automargin": true, "zerolinewidth": 2}, "scene": {"xaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "yaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}, "zaxis": {"backgroundcolor": "#E5ECF6", "gridcolor": "white", "linecolor": "white", "showbackground": true, "ticks": "", "zerolinecolor": "white", "gridwidth": 2}}, "shapedefaults": {"line": {"color": "#2a3f5f"}}, "annotationdefaults": {"arrowcolor": "#2a3f5f", "arrowhead": 0, "arrowwidth": 1}, "geo": {"bgcolor": "white", "landcolor": "#E5ECF6", "subunitcolor": "white", "showland": true, "showlakes": true, "lakecolor": "white"}, "title": {"x": 0.05}, "mapbox": {"style": "light"}}}, "yaxis": {"tickmode": "array", "tickvals": [0, 1, 2, 3, 4, 5, 6, 7, 8], "ticktext": ["<b>Mean</b>", "<b>Max</b>", "<a href=\"https://wandb.ai/metta-research/metta/runs/b.daphne.navigation_multiagent_48_rewardsharing_maxinv\">b.daphne.navigation_multiagent_48_rewardsharing_maxinv:v140</a>", "<a href=\"https://wandb.ai/metta-research/metta/runs/b.daphne.navigation_multiagent_24_rewardsharing_maxinv\">b.daphne.navigation_multiagent_24_rewardsharing_maxinv:v65</a>", "<a href=\"https://wandb.ai/metta-research/metta/runs/b.daphne.navigation_multiagent_48_norewardsharing_maxinv\">b.daphne.navigation_multiagent_48_norewardsharing_maxinv:v126</a>", "<a href=\"https://wandb.ai/metta-research/metta/runs/b.daphne.navigation_multiagent_24_norewardsharing_maxinv\">b.daphne.navigation_multiagent_24_norewardsharing_maxinv:v186</a>", "<a href=\"https://wandb.ai/metta-research/metta/runs/b.daphne.navigation2\">b.daphne.navigation2:v60</a>", "<a href=\"https://wandb.ai/metta-research/metta/runs/b.daphne.navigation\">b.daphne.navigation:v75</a>", "<a href=\"https://wandb.ai/metta-research/metta/runs/daphne.navigation\">daphne.navigation:v127</a>"]}, "xaxis": {"tickangle": -45}, "margin": {"l": 50, "r": 50, "t": 50, "b": 100}, "title": {"text": "Episode reward Policy\u2011Evaluation Matrix"}, "height": 650, "width": 900, "plot_bgcolor": "white", "showlegend": false, "meta": {"eval_image_map": {"Overall": "", "corridors": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/corridors.png", "cylinder": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder.png", "cylinder_easy": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/cylinder_easy.png", "emptyspace_outofsight": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_outofsight.png", "emptyspace_sparse": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_sparse.png", "emptyspace_withinsight": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/emptyspace_withinsight.png", "honeypot": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/honeypot.png", "knotty": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/knotty.png", "labyrinth": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/labyrinth.png", "memory_palace": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/memory_palace.png", "obstacles0": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles0.png", "obstacles1": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles1.png", "obstacles2": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles2.png", "obstacles3": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/obstacles3.png", "radial_mini": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_mini.png", "radial_small": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radial_small.png", "radialmaze": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/radialmaze.png", "swirls": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/swirls.png", "thecube": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/thecube.png", "walkaround": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walkaround.png", "walls_outofsight": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_outofsight.png", "walls_sparse": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_sparse.png", "walls_withinsight": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/walls_withinsight.png", "wanderout": "https://softmax-public.s3.amazonaws.com/policydash/evals/img/wanderout.png"}, "short_names": ["Overall", "corridors", "cylinder", "cylinder_easy", "emptyspace_outofsight", "emptyspace_sparse", "emptyspace_withinsight", "honeypot", "knotty", "labyrinth", "memory_palace", "obstacles0", "obstacles1", "obstacles2", "obstacles3", "radial_mini", "radial_small", "radialmaze", "swirls", "thecube", "walkaround", "walls_outofsight", "walls_sparse", "walls_withinsight", "wanderout"], "full_names": ["Overall", "navigation/corridors", "navigation/cylinder", "navigation/cylinder_easy", "navigation/emptyspace_outofsight", "navigation/emptyspace_sparse", "navigation/emptyspace_withinsight", "navigation/honeypot", "navigation/knotty", "navigation/labyrinth", "navigation/memory_palace", "navigation/obstacles0", "navigation/obstacles1", "navigation/obstacles2", "navigation/obstacles3", "navigation/radial_mini", "navigation/radial_small", "navigation/radialmaze", "navigation/swirls", "navigation/thecube", "navigation/walkaround", "navigation/walls_outofsight", "navigation/walls_sparse", "navigation/walls_withinsight", "navigation/wanderout"]}, "shapes": [{"fillcolor": "rgba(0,0,0,0)", "layer": "above", "line": {"color": "rgba(0,0,0,0.45)", "dash": "dash", "width": 2}, "type": "rect", "x0": -0.5, "x1": 24.5, "y0": -0.5, "y1": 1.5}]}};
+  const el = document.getElementById("heat_6524b9d5");
+  const imgs = fig.layout.meta.eval_image_map;
+  const shortNames = fig.layout.meta.short_names;
+  const fullNames = fig.layout.meta.full_names;
+  const policyRows = ["b.daphne.navigation_multiagent_48_rewardsharing_maxinv:v140", "b.daphne.navigation_multiagent_24_rewardsharing_maxinv:v65", "b.daphne.navigation_multiagent_48_norewardsharing_maxinv:v126", "b.daphne.navigation_multiagent_24_norewardsharing_maxinv:v186", "b.daphne.navigation2:v60", "b.daphne.navigation:v75", "daphne.navigation:v127"];
+  const replayBaseUrl = "https://softmax-public.s3.us-east-1.amazonaws.com/replays/evals";
+  
+  // Create mapping from short names to full paths
+  const shortToFullPath = {};
+  for (let i = 0; i < shortNames.length; i++) {
+    shortToFullPath[shortNames[i]] = fullNames[i];
+  }
+  
+  // Track double-click timing
+  let lastClickTime = 0;
+  const doubleClickThreshold = 300; // ms
+  
+  // Track if the mouse is over the heatmap
+  let isMouseOverHeatmap = false;
+  el.addEventListener('mouseenter', function() {
+    isMouseOverHeatmap = true;
+  });
+  el.addEventListener('mouseleave', function() {
+    isMouseOverHeatmap = false;
+    setTimeout(() => {
+      if (!isMouseOverHeatmap && !isMouseOverMap && !isViewLocked) {
+        hideMap();
+      }
+    }, 100);
+  });
+
+  
+const mapPanel = document.getElementById("heat_6524b9d5_map");
+const mapTitle = document.getElementById("heat_6524b9d5_map_title");
+const mapImg = document.getElementById("heat_6524b9d5_map_img");
+const mapPlaceholder = document.getElementById("heat_6524b9d5_map_placeholder");
+const lockButton = document.getElementById("heat_6524b9d5_lock_button");
+const replayButton = document.getElementById("heat_6524b9d5_replay_button");
+
+let currentDisplayedEvalName = null;
+let isMouseOverMap = false;
+let isViewLocked = false;
+let currentReplayUrl = null;
+
+// Track when mouse enters/leaves the map viewer
+mapPanel.addEventListener('mouseenter', function() {
+    isMouseOverMap = true;
+});
+
+mapPanel.addEventListener('mouseleave', function() {
+    isMouseOverMap = false;
+    if (!isViewLocked) {
+        setTimeout(() => {
+            if (!isMouseOverHeatmap && !isMouseOverMap) {
+                hideMap();
+            }
+        }, 100);
+    }
+});
+
+// Lock/unlock button
+lockButton.addEventListener('click', function() {
+    toggleLock();
+});
+
+// Replay button
+replayButton.addEventListener('click', function() {
+    if (currentReplayUrl) {
+        window.open(currentReplayUrl, '_blank');
+    }
+});
+
+function toggleLock() {
+    isViewLocked = !isViewLocked;
+    lockButton.classList.toggle('locked', isViewLocked);
+    
+    // Update button text
+    const lockText = lockButton.querySelector('span');
+    lockText.textContent = isViewLocked ? 'Unlock View' : 'Lock View';
+}
+
+function showMap(name, replayUrl = null) {
+    if (isViewLocked) return;
+    
+    if (name.toLowerCase() === "overall") return;
+    
+    // Store the currently displayed evaluation name
+    currentDisplayedEvalName = name;
+    
+    // Update replay button status
+    if (replayUrl) {
+        currentReplayUrl = replayUrl;
+        replayButton.classList.remove('disabled');
+    } else {
+        replayButton.classList.add('disabled');
+        currentReplayUrl = null;
+    }
+    
+    const url = imgs[name] || "";
+    
+    // Show only the eval name in the title (ignore the policy part)
+    mapTitle.textContent = name;
+    
+    if (url) {
+        mapImg.src = url;
+        mapImg.style.display = "block";
+        mapPlaceholder.style.display = "none";
+    } else {
+        mapImg.style.display = "none";
+        mapPlaceholder.textContent = "No map available for " + name;
+        mapPlaceholder.style.display = "block";
+    }
+}
+
+function hideMap() {
+    // Only hide if we're not locked and not hovering over the map panel itself
+    if (isViewLocked || isMouseOverMap) {
+        return;
+    }
+    
+    // Reset the current displayed evaluation name
+    currentDisplayedEvalName = null;
+    currentReplayUrl = null;
+    
+    // Update the replay button
+    replayButton.classList.add('disabled');
+    
+    mapImg.style.display = "none";
+    mapPlaceholder.textContent = "Hover over an evaluation name or cell to see the environment map";
+    mapPlaceholder.style.display = "block";
+}
+
+
+  Plotly.newPlot(el, fig.data, fig.layout)
+        .then(() => {
+          setTimeout(attachAxisHover, 500); // Ensure DOM is fully rendered
+          attachHeatmapHover();
+        });
+
+  /* ------------------------------------------------ axis‑label hover ----- */
+  function attachAxisHover() {
+    // Get all x-axis tick labels
+    const ticks = el.querySelectorAll(".xaxislayer-above .xtick text");
+    
+    // Enhanced event binding for axis labels
+    ticks.forEach((tick, i) => {
+        if (i >= shortNames.length) return; // Safety check
+        const shortName = shortNames[i];
+        
+        if (shortName.toLowerCase() === "overall") return;  // skip aggregate
+        
+        // Make sure these elements have proper cursor and pointer events
+        tick.style.pointerEvents = "all";
+        tick.style.cursor = "pointer";
+        
+        // Add multiple event handlers for redundancy
+        tick.addEventListener('click', () => {
+            showMap(shortName);
+        });
+        tick.addEventListener('mouseenter', () => {
+            showMap(shortName);
+        });
+        tick.addEventListener('mouseover', () => {
+            showMap(shortName);
+        });
+        
+        // Add data attributes for easier debugging
+        tick.setAttribute('data-short-name', shortName);
+    });
+    
+    // Add a click handler to the entire axis as a fallback
+    const xAxis = el.querySelector('.xaxislayer-above');
+    if (xAxis) {
+      xAxis.addEventListener('click', function(e) {
+        // Find the closest tick text element
+        const target = e.target.closest('.xtick text');
+        if (target && target.hasAttribute('data-short-name')) {
+          const shortName = target.getAttribute('data-short-name');
+          showMap(shortName);
+        }
+      });
+    }
+  }
+
+  /* ------------------------------------------------ heatmap cell hover --- */
+  function attachHeatmapHover() {
+    el.on('plotly_hover', function(data) {
+      const pts = data.points[0];
+      const shortName = pts.x;
+      if (shortName.toLowerCase() === "overall") return;  // skip aggregate
+      
+      const yIndex = pts.pointIndex[0];
+      
+      // Skip the first two rows (Mean and Max)
+      if (yIndex < 2) return;
+      
+      // Adjust index to account for Mean and Max rows
+      const policyIndex = yIndex - 2;
+      if (policyIndex >= policyRows.length) return;
+      
+      const policyName = policyRows[policyIndex];
+      
+      // Get full path for replay URL
+      const fullPath = shortToFullPath[shortName] || shortName;
+      
+      // Construct the replay URL
+      const replayUrl = `https://metta-ai.github.io/metta/?replayUrl=${replayBaseUrl}/${policyName}/${fullPath}/replay.json.z`;
+      
+      // Show map with replay URL
+      showMap(shortName, replayUrl);
+    });
+    
+    // Handle clicks on cells to toggle lock and detect double-clicks
+    el.on('plotly_click', function(data) {
+      const now = new Date().getTime();
+      const pts = data.points[0];
+      const shortName = pts.x;
+      const yIndex = pts.pointIndex[0];
+      
+      // Skip the first two rows (Mean and Max) and the Overall column
+      if (yIndex < 2 || shortName.toLowerCase() === "overall") return;
+      
+      // First get the policy name
+      const policyIndex = yIndex - 2;
+      if (policyIndex >= policyRows.length) return;
+      
+      const policyName = policyRows[policyIndex];
+      
+      // Get full path for this eval name (for replay URL)
+      const fullPath = shortToFullPath[shortName] || shortName;
+      
+      // Construct the replay URL
+      const replayUrl = `https://metta-ai.github.io/metta/?replayUrl=${replayBaseUrl}/${policyName}/${fullPath}/replay.json.z`;
+      
+      // Handle single vs double click
+      if (now - lastClickTime < doubleClickThreshold) {
+        // This is a double-click - open replay in new tab
+        window.open(replayUrl, '_blank');
+      } else {
+        // This is a single click - toggle lock and update map
+        toggleLock();
+        
+        // Force show the map for this cell regardless of lock state
+        const wasLocked = isViewLocked;
+        isViewLocked = false;
+        showMap(shortName, replayUrl);
+        isViewLocked = wasLocked;
+      }
+      
+      // Update last click time
+      lastClickTime = now;
+    });
+    
+    // Only trigger unhover when we're sure we've left both the heatmap and the map viewer
+    el.on('plotly_unhover', function() {
+      setTimeout(() => {
+        if (!isMouseOverHeatmap && !isMouseOverMap && !isViewLocked) {
+          hideMap();
+        }
+      }, 100);
+    });
+    
+    // Add visual indicators for clickable cells
+    el.on('plotly_afterplot', function() {
+      const cells = el.querySelectorAll('.heatmap .nsewdrag');
+      cells.forEach(cell => {
+        cell.classList.add('clickable-cell');
+        cell.style.transition = 'opacity 0.2s';
+        cell.title = "Click to lock view; double-click to open replay";
+      });
+    });
+  }
+})();
+</script>
+
+  </div>
+</body>
+</html>

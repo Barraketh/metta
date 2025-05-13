@@ -6,8 +6,8 @@ import webbrowser
 import hydra
 
 from metta.agent.policy_store import PolicyStore
+from metta.sim.simulation import SimulationSuite
 from metta.sim.simulation_config import SimulationSuiteConfig
-from metta.sim.simulation_suite import SimulationSuite
 from metta.util.config import Config, setup_metta_environment
 from metta.util.logging import setup_mettagrid_logger
 from metta.util.runtime_configuration import setup_mettagrid_environment
@@ -44,7 +44,9 @@ def main(cfg):
         if cfg.trainer.get("replay_dry_run", False):
             replay_dir = None
 
-        sim_suite = SimulationSuite(replay_job.sim, policy_record, policy_store, replay_dir=replay_dir)
+        sim_suite = SimulationSuite(
+            replay_job.sim, policy_record, policy_store, wandb_run=wandb_run, replay_dir=replay_dir
+        )
         result = sim_suite.simulate()
         # Only on macos open a browser to the replay
         if platform.system() == "Darwin" and replay_dir is not None:
