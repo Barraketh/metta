@@ -6,6 +6,7 @@ POLICIES=(
     "daphne.3object_use_no_colors"
     "dd_object_use_easy2"
     "daphne.2object_use_colors_pretrained"
+    "daveey.dist.2x4"
 )
 
 
