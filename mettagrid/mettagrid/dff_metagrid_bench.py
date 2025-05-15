@@ -22,6 +22,8 @@ class SimulationMetrics:
     elapsed_time: float
     sps: float
     reset_step: int | None = None
+    interval_start_time: float = 0.0
+    interval_end_time: float = 0.0
 
 
 def get_next_run_id() -> int:
@@ -63,40 +65,66 @@ def _run_simulation_loop(
     last_log_step_count = 0
     metrics_history: list[SimulationMetrics] = []
 
-    while time.monotonic() - start_time < duration_seconds:
-        if reset_interval and count > 0 and count % reset_interval == 0:
-            env.reset()
-            logging.info(f"Environment reset at step {count}.")
-            metrics_history.append(
-                SimulationMetrics(
-                    steps=count,
-                    elapsed_time=time.monotonic() - start_time,
-                    sps=0.0,  # Reset doesn't affect SPS
-                    reset_step=count,
-                )
-            )
+    # Track the last reset time to ensure we're not measuring reset overhead
+    last_reset_time = start_time
 
+    while time.monotonic() - start_time < duration_seconds:
+        current_time = time.monotonic()
+
+        # Check if we need to reset
+        if reset_interval and count > 0 and count % reset_interval == 0:
+            reset_start = time.monotonic()
+            env.reset()
+            reset_end = time.monotonic()
+            reset_duration = reset_end - reset_start
+
+            logging.info(f"Environment reset at step {count}. Reset took {reset_duration:.3f}s")
+
+            # Only log metrics if we're not in the middle of a measurement interval
+            if current_time - last_log_time >= log_interval_seconds:
+                metrics_history.append(
+                    SimulationMetrics(
+                        steps=count,
+                        elapsed_time=current_time - start_time,
+                        sps=0.0,  # Reset doesn't affect SPS
+                        reset_step=count,
+                        interval_start_time=reset_start,
+                        interval_end_time=reset_end,
+                    )
+                )
+
+            last_reset_time = reset_end
+            last_log_time = reset_end  # Adjust the last log time to account for reset
+
+        # Take a step
+        step_start = time.monotonic()
         action = env.action_space.sample()
         env.step(action)
+        step_end = time.monotonic()
         count += 1
 
+        # Check if we need to log metrics
         current_time = time.monotonic()
         time_since_last_log = current_time - last_log_time
 
         if time_since_last_log >= log_interval_seconds:
             steps_this_interval = count - last_log_step_count
-            sps = steps_this_interval / time_since_last_log
-            elapsed_time = current_time - start_time
+            # Only count time since last reset to avoid measuring reset overhead
+            effective_time = current_time - max(last_log_time, last_reset_time)
+            sps = steps_this_interval / effective_time if effective_time > 0 else 0
+
             logging.info(
-                f"SPS: {sps:.2f} (Total steps: {count}, Elapsed time: {elapsed_time:.2f}s, Steps in interval: {steps_this_interval})"
+                f"SPS: {sps:.2f} (Total steps: {count}, Elapsed time: {current_time - start_time:.2f}s, "
+                f"Steps in interval: {steps_this_interval}, Effective time: {effective_time:.2f}s)"
             )
 
-            # Store metrics for later logging
             metrics_history.append(
                 SimulationMetrics(
                     steps=count,
-                    elapsed_time=elapsed_time,
+                    elapsed_time=current_time - start_time,
                     sps=sps,
+                    interval_start_time=last_log_time,
+                    interval_end_time=current_time,
                 )
             )
 
@@ -104,9 +132,21 @@ def _run_simulation_loop(
             last_log_step_count = count
 
     total_time = time.monotonic() - start_time
-    avg_sps = count / total_time if total_time > 0 else 0
+    # Calculate average SPS excluding reset overhead
+    total_effective_time = total_time
+    if reset_interval:
+        # Sum up all reset durations
+        reset_durations = [
+            m.interval_end_time - m.interval_start_time for m in metrics_history if m.reset_step is not None
+        ]
+        total_effective_time = total_time - sum(reset_durations)
 
-    logging.info(f"Finished simulation loop after {count} steps in {total_time:.2f}s.")
+    avg_sps = count / total_effective_time if total_effective_time > 0 else 0
+
+    logging.info(
+        f"Finished simulation loop after {count} steps in {total_time:.2f}s "
+        f"(effective time: {total_effective_time:.2f}s, avg SPS: {avg_sps:.2f})"
+    )
     return count, total_time, avg_sps, metrics_history
 
 
@@ -123,6 +163,7 @@ def log_metrics_to_wandb(
                     f"{simulation_type}/reset": True,
                     f"{simulation_type}/reset_step": metrics.reset_step,
                     f"{simulation_type}/elapsed_time": metrics.elapsed_time,
+                    f"{simulation_type}/reset_duration": metrics.interval_end_time - metrics.interval_start_time,
                 }
             )
         else:
@@ -132,6 +173,7 @@ def log_metrics_to_wandb(
                     f"{simulation_type}/sps": metrics.sps,
                     f"{simulation_type}/total_steps": metrics.steps,
                     f"{simulation_type}/elapsed_time": metrics.elapsed_time,
+                    f"{simulation_type}/interval_duration": metrics.interval_end_time - metrics.interval_start_time,
                 }
             )
 
