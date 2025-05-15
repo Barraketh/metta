@@ -215,7 +215,7 @@ def run_continuous_simulation(
 
 def run_simulation_with_resets(
     env_config_name: str = "benchmark",
-    total_steps: int = 10000,  # Default to 10k total steps
+    total_steps: int = 100000,  # Default to 100k total steps
     log_interval_steps: int = 1000,  # Default to log every 1k steps
     steps_per_reset_cycle: int = 1000,  # Default to reset every 1k steps
 ) -> tuple[int, float, float]:
