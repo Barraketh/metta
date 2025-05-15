@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 import wandb
+from omegaconf import OmegaConf
 
 from mettagrid.config.utils import get_cfg
 from mettagrid.mettagrid_env import MettaGridEnv
@@ -289,6 +290,9 @@ def main():
     run_id = get_next_run_id()
     run_name = f"dff_metagrid_bench_steps_{run_id:04d}_combined"
 
+    # Get and resolve the environment configuration
+    env_cfg_resolved = OmegaConf.to_container(get_cfg(args.env_config), resolve=True)
+
     # Initialize wandb once for both simulations
     wandb.init(
         project="metta",
@@ -297,7 +301,8 @@ def main():
             "total_steps": args.total_steps,
             "log_interval_steps": args.log_interval_steps,
             "steps_per_reset_cycle": args.steps_per_reset_cycle,  # Relevant for the with_resets part
-            "env_config": args.env_config,
+            "env_config_details": env_cfg_resolved,
+            "env_config_name": args.env_config,
             "run_id": run_id,  # Add run_id to config for easier tracking
         },
     )
