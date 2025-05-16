@@ -25,13 +25,27 @@ def make_env_func(
     register_resolvers()
 
     # Create the environment instance
-    env = hydra.utils.instantiate(
+    # The first 'cfg' tells Hydra what to instantiate (e.g., using cfg._target_)
+    # The second 'cfg' is passed as the first positional argument to the instantiated class's __init__
+    # (which is 'env_cfg' for MettaGridEnv)
+    env_instance = hydra.utils.instantiate(
         cfg, cfg, render_mode=render_mode, buf=buf, stats_writer=stats_writer, replay_writer=replay_writer, **kwargs
     )
+
+    # Read the num_agents by accessing the _num_agents internal attribute directly
+    # This bypasses property access which OmegaConf might be intercepting.
+    if not hasattr(env_instance, "_num_agents"):
+        logging.error(
+            f"FATAL: env_instance of type {type(env_instance)} does not have attribute _num_agents after instantiation. Config used: {cfg}"
+        )
+        raise AttributeError(
+            f"env_instance created from {cfg.get('_target_', 'unknown_target')} is missing _num_agents"
+        )
+
     # Ensure the environment is properly initialized
-    if hasattr(env, "_c_env") and env._c_env is None:
+    if hasattr(env_instance, "_c_env") and env_instance._c_env is None:
         raise ValueError("MettaGridEnv._c_env is None after hydra instantiation")
-    return env
+    return env_instance
 
 
 def make_vecenv(

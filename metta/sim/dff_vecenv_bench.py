@@ -10,7 +10,9 @@ import wandb
 from omegaconf import DictConfig, OmegaConf
 
 from metta.sim.vecenv import make_vecenv  # Key import for vectorized envs
-from mettagrid.config.utils import get_cfg  # Still useful for loading the base env config
+from metta.util.resolvers import register_resolvers  # Import for custom resolvers
+
+# from mettagrid.config.utils import get_cfg # No longer using get_cfg for this script
 
 # from mettagrid.mettagrid_env import MettaGridEnv # No longer directly using MettaGridEnv
 
@@ -319,12 +321,6 @@ def run_simulation_with_resets(
 def parse_args():
     parser = argparse.ArgumentParser(description="Run PufferLib Vectorized Environment benchmark simulations")
     parser.add_argument(
-        "--env-config-name",
-        type=str,
-        default="benchmark",
-        help="Base environment configuration name (from mettagrid configs, e.g., benchmark)",
-    )
-    parser.add_argument(
         "--total-steps",
         type=int,
         default=100000,
@@ -346,85 +342,190 @@ def parse_args():
     parser.add_argument(
         "--vectorization",
         type=str,
-        default="serial",
+        default="multiprocessing",
         choices=["serial", "multiprocessing", "ray"],
-        help="Vectorization backend (default: serial)",
+        help="Vectorization backend (default: multiprocessing)",
     )
-    parser.add_argument("--num-envs", type=int, default=1, help="Number of parallel environments (default: 1)")
+    parser.add_argument("--num-envs", type=int, default=4, help="Number of parallel environments (default: 4)")
     parser.add_argument(
         "--num-workers",
         type=int,
-        default=1,
-        help="Number of workers for multiprocessing/ray (ignored for serial) (default: 1)",
+        default=4,
+        help="Number of workers for multiprocessing/ray (ignored for serial) (default: 4)",
     )
-    parser.add_argument("--batch-size", type=int, default=None, help="Batch size for vectorization (default: num_envs)")
+    parser.add_argument(
+        "--batch-size", type=int, default=None, help="Batch size for vectorization (PufferLib default: num_envs)"
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+    logging.info("Starting PufferLib VecEnv benchmark script. Will iterate over multiple num_workers values.")
+
+    # Path to the specific environment configuration file we will use for the benchmark
+    specific_env_config_path = "configs/env/mettagrid/navigation/evals/emptyspace_withinsight.yaml"
+    base_mettagrid_config_path = "configs/env/mettagrid/mettagrid.yaml"
+    logging.info(f"Loading base environment config: {base_mettagrid_config_path}")
+    logging.info(f"Loading specific environment overrides from: {specific_env_config_path}")
+
+    try:
+        base_cfg = OmegaConf.load(base_mettagrid_config_path)
+        if not isinstance(base_cfg, DictConfig):
+            logging.error(f"FATAL: Base config file {base_mettagrid_config_path} did not load as DictConfig.")
+            return
+        specific_cfg = OmegaConf.load(specific_env_config_path)
+        if not isinstance(specific_cfg, DictConfig):
+            logging.error(f"FATAL: Specific config file {specific_env_config_path} did not load as DictConfig.")
+            return
+        merged_cfg = OmegaConf.merge(base_cfg, specific_cfg)
+        if not isinstance(merged_cfg, DictConfig):
+            logging.error("FATAL: Merged config did not result in a DictConfig.")
+            return
+        base_env_cfg_obj: DictConfig = merged_cfg
+    except FileNotFoundError as e:
+        logging.error(f"FATAL: Could not find a configuration file: {e.filename}")
+        logging.error("Please ensure files exist and the script is run from the project root.")
+        return
+
+    register_resolvers()
+    OmegaConf.resolve(base_env_cfg_obj)
+
+    if "_target_" not in base_env_cfg_obj:
+        logging.error(
+            f"FATAL: _target_ key not found in the loaded and resolved environment config: {specific_env_config_path}"
+        )
+        logging.error(f"Full resolved config: {OmegaConf.to_yaml(base_env_cfg_obj)}")
+        return
+    logging.info(f"Resolved _target_ in env_config: {base_env_cfg_obj._target_}")
+
+    actual_env_cfg_for_instantiation = base_env_cfg_obj
+    env_cfg_for_wandb = OmegaConf.to_container(actual_env_cfg_for_instantiation, resolve=True)
+
+    num_workers_to_test = [1, 2, 4, 8, 16]
+    logging.info(f"Will run benchmarks for the following num_workers values: {num_workers_to_test}")
+
+    for current_num_workers in num_workers_to_test:
+        # Set num_envs equal to current_num_workers for "one env per process"
+        current_num_envs = current_num_workers
+        logging.info(
+            f"--- Starting benchmark run for num_workers = {current_num_workers} (and num_envs = {current_num_envs}) ---"
+        )
+        run_id = get_next_run_id()
+        # Update run_name to reflect num_envs = num_workers
+        run_name = f"dff_vecenv_bench_{args.vectorization}_ne{current_num_envs}_nw{current_num_workers}_{run_id:04d}_nav_empty_withinsight"
+
+        wandb.init(
+            project="metta_vecenv_bench",
+            name=run_name,
+            config={
+                "env_config_name": specific_env_config_path,
+                "env_config_details": env_cfg_for_wandb,
+                "total_individual_steps": args.total_steps,
+                "log_interval_individual_steps": args.log_interval_steps,
+                "steps_per_reset_cycle_individual": args.steps_per_reset_cycle,
+                "vectorization_backend": args.vectorization,
+                "num_environments": current_num_envs,  # Use current_num_envs
+                "num_workers": current_num_workers,
+                "batch_size": args.batch_size or current_num_envs,  # Batch size can default to new num_envs
+                "run_id": run_id,
+            },
+            reinit=True,
+        )
+
+        # Define custom x-axis for interval metrics
+        metrics_to_define = [
+            "vec_interval_sps",
+            "vec_steps_in_interval",
+            "vec_time_for_interval",
+            "vec_total_elapsed_time",
+            "vec_reset_duration",
+            "vec_reset_occurred_at_step",
+        ]
+        for sim_type in ["continuous", "with_resets"]:
+            step_metric_key = f"{sim_type}/vec_total_steps_so_far"
+            wandb.define_metric(step_metric_key)  # Define the step metric itself
+            for metric_base_name in metrics_to_define:
+                wandb.define_metric(f"{sim_type}/{metric_base_name}", step_metric=step_metric_key)
+
+        # Define metrics for old interval logging keys (if any are still used or for compatibility)
+        # These were defined with "vec_interval" as step_metric, which isn't explicitly logged anymore.
+        # Let's ensure they are defined, perhaps against a generic step or if "vec_interval" is logged.
+        # For now, assuming vec_total_steps_so_far is the primary step metric.
+        # If "vec_interval" is a step counter logged with wandb.log({"vec_interval": step_num, ...}), then this is fine.
+        # Based on current log_metrics_to_wandb, it doesn't log "vec_interval" as a standalone step.
+        # The previous definition might have been for a different logging structure.
+        # Let's stick to defining metrics against vec_total_steps_so_far or without step_metric for summaries.
+
+        # Define metrics for summary statistics (logged at the end)
+        final_metrics_to_define = [
+            "vec_final_total_steps",
+            "vec_final_total_time",
+            "vec_final_avg_sps",
+        ]
+        for sim_type in ["continuous", "with_resets"]:
+            for metric_base_name in final_metrics_to_define:
+                wandb.define_metric(
+                    f"{sim_type}/{metric_base_name}", summary="max"
+                )  # Max is suitable for these final values
+
+        # The following definitions seem to be duplicates or from a previous structure.
+        # wandb.define_metric("vec_interval") # This is a step counter, should be defined if used as such.
+        # wandb.define_metric("vec_sps_interval", step_metric="vec_interval")
+        # wandb.define_metric("vec_total_steps_so_far", step_metric="vec_interval")
+        # wandb.define_metric("vec_total_episodes_so_far", step_metric="vec_interval") # Not currently logged
+        # wandb.define_metric("vec_total_return_so_far", step_metric="vec_interval") # Not currently logged
+        # wandb.define_metric("vec_mean_episode_return_so_far", step_metric="vec_interval") # Not currently logged
+        # wandb.define_metric("vec_mean_episode_length_so_far", step_metric="vec_interval") # Not currently logged
+
+        # wandb.define_metric("total_steps", summary="max") # These are not logged with these exact keys
+        # wandb.define_metric("total_episodes", summary="max")
+        # wandb.define_metric("total_return", summary="max")
+        # wandb.define_metric("mean_episode_return", summary="max")
+        # wandb.define_metric("mean_episode_length", summary="max")
+        # wandb.define_metric("sps", summary="max")
+
+        logging.info(
+            f"--- Running Continuous VecEnv Simulation Part (num_workers={current_num_workers}, num_envs={current_num_envs}) ---"
+        )
+        run_continuous_simulation(
+            env_config=actual_env_cfg_for_instantiation,
+            vectorization=args.vectorization,
+            num_envs=current_num_envs,  # Pass current_num_envs
+            num_workers=current_num_workers,
+            batch_size=args.batch_size,
+            total_steps=args.total_steps,
+            log_interval_steps=args.log_interval_steps,
+        )
+        logging.info(
+            f"--- Continuous VecEnv Simulation Part Finished (num_workers={current_num_workers}, num_envs={current_num_envs}) ---"
+        )
+
+        logging.info(
+            f"--- Running VecEnv Simulation with Resets Part (num_workers={current_num_workers}, num_envs={current_num_envs}) ---"
+        )
+        run_simulation_with_resets(
+            env_config=actual_env_cfg_for_instantiation,
+            vectorization=args.vectorization,
+            num_envs=current_num_envs,  # Pass current_num_envs
+            num_workers=current_num_workers,
+            batch_size=args.batch_size,
+            total_steps=args.total_steps,
+            log_interval_steps=args.log_interval_steps,
+            steps_per_reset_cycle=args.steps_per_reset_cycle,
+        )
+        logging.info(
+            f"--- VecEnv Simulation with Resets Part Finished (num_workers={current_num_workers}, num_envs={current_num_envs}) ---"
+        )
+
+        wandb.finish()
+        logging.info(
+            f"--- Finished benchmark run for num_workers = {current_num_workers} (and num_envs = {current_num_envs}) ---"
+        )
+
     logging.info(
-        "Starting PufferLib VecEnv benchmark script. Both continuous and with-resets simulations will be run if configured."
+        f"PufferLib VecEnv benchmark script finished iterating over num_workers (and matching num_envs): {num_workers_to_test}."
     )
-
-    run_id = get_next_run_id()
-    run_name = f"dff_vecenv_bench_{args.vectorization}_ne{args.num_envs}_nw{args.num_workers}_{run_id:04d}"
-
-    # Load the base environment config once
-    # Assuming get_cfg loads a config compatible with what make_env_func in vecenv.py expects
-    # This might need adjustment if make_env_func expects a hydra-style config object directly
-    # For now, we load it as a DictConfig as vecenv.py uses hydra.utils.instantiate
-    base_env_cfg_obj: DictConfig = get_cfg(args.env_config_name)  # type: ignore
-
-    # Convert OmegaConf to a serializable dict for wandb logging.
-    # The full DictConfig object might not be ideal for direct logging.
-    env_cfg_for_wandb = OmegaConf.to_container(base_env_cfg_obj, resolve=True)
-
-    wandb.init(
-        project="metta_vecenv_bench",  # New project for these benchmarks
-        name=run_name,
-        config={
-            "env_config_name": args.env_config_name,
-            "env_config_details": env_cfg_for_wandb,  # Log resolved base env config
-            "total_individual_steps": args.total_steps,
-            "log_interval_individual_steps": args.log_interval_steps,
-            "steps_per_reset_cycle_individual": args.steps_per_reset_cycle,
-            "vectorization_backend": args.vectorization,
-            "num_environments": args.num_envs,
-            "num_workers": args.num_workers,
-            "batch_size": args.batch_size or args.num_envs,
-            "run_id": run_id,
-        },
-    )
-    logging.info(f"Initiating VecEnv benchmark with wandb run name: {run_name}")
-
-    logging.info("--- Running Continuous VecEnv Simulation Part ---")
-    run_continuous_simulation(
-        env_config=base_env_cfg_obj,
-        vectorization=args.vectorization,
-        num_envs=args.num_envs,
-        num_workers=args.num_workers,
-        batch_size=args.batch_size,
-        total_steps=args.total_steps,
-        log_interval_steps=args.log_interval_steps,
-    )
-    logging.info("--- Continuous VecEnv Simulation Part Finished ---")
-
-    logging.info("--- Running VecEnv Simulation with Resets Part ---")
-    run_simulation_with_resets(
-        env_config=base_env_cfg_obj,
-        vectorization=args.vectorization,
-        num_envs=args.num_envs,
-        num_workers=args.num_workers,
-        batch_size=args.batch_size,
-        total_steps=args.total_steps,
-        log_interval_steps=args.log_interval_steps,
-        steps_per_reset_cycle=args.steps_per_reset_cycle,
-    )
-    logging.info("--- VecEnv Simulation with Resets Part Finished ---")
-
-    wandb.finish()
-    logging.info("PufferLib VecEnv benchmark script finished.")
 
 
 if __name__ == "__main__":
