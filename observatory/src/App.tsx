@@ -149,8 +149,18 @@ function App() {
   const policies = [...new Set(matrix.map(r => r.policy_uri))]
   const envs = [...new Set(matrix.map(r => r.eval_name))]
   const shortNames = envs.map(getShortName);
+  
+  // Sort envs and shortNames together based on shortNames
+  const sortedIndices = shortNames
+    .map((name, index) => ({ name, index }))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(item => item.index);
+  
+  const sortedEnvs = sortedIndices.map(i => envs[i]);
+  const sortedShortNames = sortedIndices.map(i => shortNames[i]);
+  
   const z = policies.map(policy => 
-    envs.map(env => {
+    sortedEnvs.map(env => {
       const row = matrix.find(r => r.policy_uri === policy && r.eval_name === env)
       return row ? row.value : 0
     })
@@ -231,42 +241,20 @@ function App() {
         borderRadius: '5px',
         boxShadow: '0 2px 4px rgba(0,0,0,.1)'
       }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+        <h1 style={{
+          color: '#333',
+          borderBottom: '1px solid #ddd',
+          paddingBottom: '10px',
           marginBottom: '20px'
         }}>
-          <h1 style={{
-            color: '#333',
-            margin: 0
-          }}>
-            Policy Evaluation Dashboard
-          </h1>
-          <select
-            value={selectedMetric}
-            onChange={(e) => setSelectedMetric(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '4px',
-              border: '1px solid #ddd',
-              fontSize: '14px',
-              minWidth: '150px'
-            }}
-          >
-            {metrics.map(metric => (
-              <option key={metric} value={metric}>
-                {metric}
-              </option>
-            ))}
-          </select>
-        </div>
+          Policy Evaluation Dashboard
+        </h1>
         
         <div onMouseEnter={handleHeatmapEnter} onMouseLeave={handleHeatmapLeave}>
           <Plot
             data={[{
               z,
-              x: shortNames,
+              x: sortedShortNames,
               y: policies,
               type: 'heatmap',
               colorscale: 'Viridis',
@@ -293,6 +281,36 @@ function App() {
             }}
             onHover={handleHeatmapHover}
           />
+        </div>
+
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginTop: '20px',
+          marginBottom: '30px',
+          gap: '12px'
+        }}>
+          <div style={{ color: '#666', fontSize: '14px' }}>Heatmap Metric</div>
+          <select
+            value={selectedMetric}
+            onChange={(e) => setSelectedMetric(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '4px',
+              border: '1px solid #ddd',
+              fontSize: '14px',
+              minWidth: '200px',
+              backgroundColor: '#fff',
+              cursor: 'pointer'
+            }}
+          >
+            {metrics.map(metric => (
+              <option key={metric} value={metric}>
+                {metric}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Map Viewer */}
