@@ -1,10 +1,5 @@
 import { useEffect, useState } from 'react'
 import Plot from 'react-plotly.js'
-import * as duckdb from '@duckdb/duckdb-wasm';
-import duckdb_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
-import mvp_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
-import duckdb_wasm_eh from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
-import eh_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
 
 // CSS for map viewer
 const MAP_VIEWER_CSS = `
@@ -81,73 +76,14 @@ interface MatrixRow {
   replay_url?: string
 }
 
-
-// Initialize DuckDB
-async function initDuckDB() {
-  const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
-    mvp: {
-        mainModule: duckdb_wasm,
-        mainWorker: mvp_worker,
-    },
-    eh: {
-        mainModule: duckdb_wasm_eh,
-        mainWorker: eh_worker,
-    },
-  };
-  // Select a bundle based on browser checks
-  const bundle = await duckdb.selectBundle(MANUAL_BUNDLES);
-  // Instantiate the asynchronous version of DuckDB-wasm
-  const worker = new Worker(bundle.mainWorker!);
-  const logger = new duckdb.ConsoleLogger();
-  const db = new duckdb.AsyncDuckDB(logger, worker);
-  await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
-  return db
-}
-
-
-// Load data from DuckDB file
-async function loadData(dbUri: string) {
-  const db = await initDuckDB()
-  
-  const conn = await db.connect()
-  await conn.send(`ATTACH DATABASE '${dbUri}' AS eval`);
-  await conn.send(`USE eval`);
-  
-  // Query data for heatmap
-  const table = await conn.query(`
-    WITH potential AS (
-      SELECT 
-        policy_key,
-        policy_version,
-        sim_env,
-        COUNT(*) AS potential_cnt
-      FROM policy_simulation_agent_samples
-      GROUP BY policy_key, policy_version, sim_env
-    ),
-    recorded AS (
-      SELECT 
-        policy_key,
-        policy_version,
-        sim_env,
-        SUM(value) AS recorded_sum
-      FROM policy_simulation_agent_metrics
-      WHERE metric = 'reward'  -- TODO: make configurable
-      GROUP BY policy_key, policy_version, sim_env
-    )
-    SELECT
-      potential.policy_key || ':v' || potential.policy_version AS policy_uri,
-      potential.sim_env AS eval_name,
-      COALESCE(recorded.recorded_sum, 0) * 1.0 / potential.potential_cnt AS value
-    FROM potential
-    LEFT JOIN recorded
-      USING (policy_key, policy_version, sim_env)
-    ORDER BY policy_uri, eval_name
-  `)
-
-  const matrix = table.toArray();
-  
-  await conn.close()
-  return matrix
+// Load data from API endpoint
+async function loadData() {
+  const response = await fetch('http://localhost:8000/api/policy-evals');
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const matrix = await response.json();
+  return matrix;
 }
 
 function App() {
@@ -172,14 +108,7 @@ function App() {
   };
 
   useEffect(() => {
-    const dbUri = import.meta.env.VITE_EVAL_DB_URI
-    if (!dbUri) {
-      setError('VITE_EVAL_DB_URI environment variable not set')
-      setLoading(false)
-      return
-    }
-    
-    loadData(dbUri)
+    loadData()
       .then(data => {
         setMatrix(data)
         setLoading(false)

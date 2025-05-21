@@ -121,7 +121,7 @@ class SimulationStatsDB(EpisodeStatsDB):
 
             merged._insert_agent_policies(all_episode_ids, agent_tuple_map)
             merged._update_episode_simulations(all_episode_ids, sim_id)
-
+            merged._create_convenience_views()
         else:
             logger.warning(
                 "No episodes found in merged database. This suggests an issue with environment instrumentation. "
@@ -228,6 +228,46 @@ class SimulationStatsDB(EpisodeStatsDB):
              WHERE id = ?
             """,
             [(sim_id, eid) for eid in episode_ids],
+        )
+
+    def _create_convenience_views(self) -> None:
+        self.con.execute(
+            """
+            CREATE VIEW IF NOT EXISTS episode_info AS (
+                WITH episode_agents AS (
+                  SELECT episode_id,
+                  COUNT(*) as num_agents 
+                  FROM agent_policies 
+                  GROUP BY episode_id
+                )
+                SELECT 
+                  e.id as episode_id,
+                  s.name as eval_name,
+                  s.suite,
+                  s.env,
+                  s.policy_key,
+                  s.policy_version,
+                  e.created_at,
+                  e.replay_url,
+                  episode_agents.num_agents 
+                FROM simulations s 
+                JOIN episodes e ON e.simulation_id = s.id 
+                JOIN episode_agents ON e.id = episode_agents.episode_id)
+            """
+        )
+
+        self.con.execute(
+            """
+            CREATE VIEW IF NOT EXISTS episode_metrics AS (
+                WITH totals AS (
+                    SELECT episode_id, metric, SUM(value) as value 
+                    FROM agent_metrics 
+                    GROUP BY episode_id, metric
+                ) 
+                SELECT t.episode_id, t.metric, t.value / e.num_agents as value 
+                FROM totals t 
+                JOIN episode_info e ON t.episode_id = e.episode_id
+            """
         )
 
     def merge_in(self, other: "SimulationStatsDB") -> None:
