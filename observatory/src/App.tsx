@@ -5,8 +5,8 @@ import Plot from 'react-plotly.js'
 const MAP_VIEWER_CSS = `
 .map-viewer {
     position: relative;
-    width: 100%;
-    margin-top: 20px;
+    width: 1000px;
+    margin: 20px auto;
     padding: 15px;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -91,6 +91,7 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [matrix, setMatrix] = useState<MatrixRow[]>([])
   const [selectedEval, setSelectedEval] = useState<string | null>(null)
+  const [selectedReplayUrl, setSelectedReplayUrl] = useState<string | null>(null)
   const [isViewLocked, setIsViewLocked] = useState(false)
   const [isMouseOverMap, setIsMouseOverMap] = useState(false)
   const [isMouseOverHeatmap, setIsMouseOverHeatmap] = useState(false)
@@ -141,11 +142,14 @@ function App() {
   // Map viewer functions
   const handleHeatmapHover = (event: any) => {
     if (event.points && event.points[0]) {
-      const evalName = event.points[0].x;
+      const shortName = event.points[0].x;
       const policyUri = event.points[0].y;
-      const row = matrix.find(r => r.policy_uri === policyUri && r.eval_name === evalName);
-      if (!isViewLocked && evalName.toLowerCase() !== 'overall') {
-        setSelectedEval(evalName);
+      // Find the full eval name that corresponds to this short name
+      const fullEvalName = envs.find(env => getShortName(env) === shortName);
+      if (fullEvalName && !isViewLocked && shortName.toLowerCase() !== 'overall') {
+        const row = matrix.find(r => r.policy_uri === policyUri && r.eval_name === fullEvalName);
+        setSelectedEval(fullEvalName);
+        setSelectedReplayUrl(row?.replay_url || null);
       }
     }
   };
@@ -156,6 +160,7 @@ function App() {
       setTimeout(() => {
         if (!isMouseOverHeatmap && !isMouseOverMap) {
           setSelectedEval(null);
+          setSelectedReplayUrl(null);
         }
       }, 100);
     }
@@ -179,17 +184,17 @@ function App() {
       setTimeout(() => {
         if (!isMouseOverHeatmap && !isMouseOverMap) {
           setSelectedEval(null);
+          setSelectedReplayUrl(null);
         }
       }, 100);
     }
   };
 
   const handleReplayClick = () => {
-    if (selectedEval) {
-      const row = matrix.find(r => r.eval_name === selectedEval);
-      if (row?.replay_url) {
-        window.open(row.replay_url, '_blank');
-      }
+    const replay_url_prefix = "https://metta-ai.github.io/metta/?replayUrl="
+    const replay_url = selectedReplayUrl ? replay_url_prefix + selectedReplayUrl : null
+    if (replay_url) {
+      window.open(replay_url, '_blank');
     }
   };
   
@@ -232,8 +237,19 @@ function App() {
             layout={{
               title: 'Policy Evaluation Report: reward',  // TODO: make configurable
               height: 600,
-              width: 900,
-              margin: { t: 50, b: 100, l: 100, r: 50 }
+              width: 1000,
+              margin: { t: 50, b: 150, l: 200, r: 50 },
+              xaxis: {
+                tickangle: -45
+              },
+              yaxis: {
+                tickangle: 0,
+                automargin: true
+              }
+            }}
+            style={{
+              margin: '0 auto',
+              display: 'block'
             }}
             onHover={handleHeatmapHover}
           />
@@ -281,10 +297,10 @@ function App() {
               <span>{isViewLocked ? 'Unlock View' : 'Lock View'}</span>
             </button>
             <button 
-              className={`map-button ${!selectedEval ? 'disabled' : ''}`}
+              className={`map-button ${!selectedReplayUrl ? 'disabled' : ''}`}
               onClick={handleReplayClick}
               title="Open replay in Mettascope"
-              disabled={!selectedEval}
+              disabled={!selectedReplayUrl}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 011.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5z" clipRule="evenodd" />
