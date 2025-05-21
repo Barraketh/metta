@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import Plot from 'react-plotly.js'
-
+import { getMetrics, getPolicyEvals } from './data_loader'
 // CSS for map viewer
 const MAP_VIEWER_CSS = `
 .map-viewer {
@@ -77,22 +77,6 @@ interface MatrixRow {
 }
 
 // Load data from API endpoints
-async function loadMetrics() {
-  const response = await fetch('http://localhost:8000/api/metrics');
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  return await response.json();
-}
-
-async function loadData(metric: string) {
-  const response = await fetch(`http://localhost:8000/api/policy-evals?metric=${encodeURIComponent(metric)}`);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const matrix = await response.json();
-  return matrix;
-}
 
 function App() {
   const [loading, setLoading] = useState(true)
@@ -122,8 +106,8 @@ function App() {
     const fetchData = async () => {
       try {
         const [metricsData, matrixData] = await Promise.all([
-          loadMetrics(),
-          loadData(selectedMetric)
+          getMetrics(),
+          getPolicyEvals(selectedMetric)
         ]);
         setMetrics(metricsData);
         setMatrix(matrixData);
