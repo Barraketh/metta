@@ -76,9 +76,17 @@ interface MatrixRow {
   replay_url?: string
 }
 
-// Load data from API endpoint
-async function loadData() {
-  const response = await fetch('http://localhost:8000/api/policy-evals');
+// Load data from API endpoints
+async function loadMetrics() {
+  const response = await fetch('http://localhost:8000/api/metrics');
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.json();
+}
+
+async function loadData(metric: string) {
+  const response = await fetch(`http://localhost:8000/api/policy-evals?metric=${encodeURIComponent(metric)}`);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
@@ -90,6 +98,8 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [matrix, setMatrix] = useState<MatrixRow[]>([])
+  const [metrics, setMetrics] = useState<string[]>([])
+  const [selectedMetric, setSelectedMetric] = useState<string>("reward")
   const [selectedEval, setSelectedEval] = useState<string | null>(null)
   const [selectedReplayUrl, setSelectedReplayUrl] = useState<string | null>(null)
   const [isViewLocked, setIsViewLocked] = useState(false)
@@ -109,16 +119,23 @@ function App() {
   };
 
   useEffect(() => {
-    loadData()
-      .then(data => {
-        setMatrix(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        setError(err.message)
-        setLoading(false)
-      })
-  }, [])
+    const fetchData = async () => {
+      try {
+        const [metricsData, matrixData] = await Promise.all([
+          loadMetrics(),
+          loadData(selectedMetric)
+        ]);
+        setMetrics(metricsData);
+        setMatrix(matrixData);
+        setLoading(false);
+      } catch (err: any) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedMetric]);
   
   if (loading) {
     return <div>Loading data...</div>
@@ -214,13 +231,36 @@ function App() {
         borderRadius: '5px',
         boxShadow: '0 2px 4px rgba(0,0,0,.1)'
       }}>
-        <h1 style={{
-          color: '#333',
-          borderBottom: '1px solid #ddd',
-          paddingBottom: '10px'
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px'
         }}>
-          Policy Evaluation Dashboard
-        </h1>
+          <h1 style={{
+            color: '#333',
+            margin: 0
+          }}>
+            Policy Evaluation Dashboard
+          </h1>
+          <select
+            value={selectedMetric}
+            onChange={(e) => setSelectedMetric(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '4px',
+              border: '1px solid #ddd',
+              fontSize: '14px',
+              minWidth: '150px'
+            }}
+          >
+            {metrics.map(metric => (
+              <option key={metric} value={metric}>
+                {metric}
+              </option>
+            ))}
+          </select>
+        </div>
         
         <div onMouseEnter={handleHeatmapEnter} onMouseLeave={handleHeatmapLeave}>
           <Plot
@@ -231,11 +271,11 @@ function App() {
               type: 'heatmap',
               colorscale: 'Viridis',
               colorbar: {
-                title: 'reward'  // TODO: make configurable
+                title: selectedMetric
               }
             }]}
             layout={{
-              title: 'Policy Evaluation Report: reward',  // TODO: make configurable
+              title: `Policy Evaluation Report: ${selectedMetric}`,
               height: 600,
               width: 1000,
               margin: { t: 50, b: 150, l: 200, r: 50 },

@@ -25,8 +25,8 @@ class MatrixRow(BaseModel):
     replay_url: Optional[str] = None
 
 
-@app.get("/api/policy-evals")
-async def get_policy_evals() -> List[MatrixRow]:
+@app.get("/api/metrics")
+async def get_metrics() -> List[str]:
     db_uri = os.getenv("EVAL_DB_URI")
     if not db_uri:
         raise HTTPException(status_code=500, detail="EVAL_DB_URI environment variable not set")
@@ -36,9 +36,36 @@ async def get_policy_evals() -> List[MatrixRow]:
         conn.execute(f"ATTACH DATABASE '{db_uri}' AS eval")
         conn.execute("USE eval")
 
-        # Query data for heatmap
+        # Query distinct metrics
         result = conn.execute("""
-          WITH my_metric AS (SELECT * FROM episode_metrics WHERE metric = 'reward') 
+            SELECT DISTINCT metric 
+            FROM episode_metrics 
+            ORDER BY metric
+        """).fetchall()
+
+        metrics = [row[0] for row in result]
+        conn.close()
+        return metrics
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/policy-evals")
+async def get_policy_evals(metric: str = "reward") -> List[MatrixRow]:
+    db_uri = os.getenv("EVAL_DB_URI")
+    if not db_uri:
+        raise HTTPException(status_code=500, detail="EVAL_DB_URI environment variable not set")
+
+    try:
+        conn = duckdb.connect()
+        conn.execute(f"ATTACH DATABASE '{db_uri}' AS eval")
+        conn.execute("USE eval")
+
+        # Query data for heatmap with parameterized metric
+        result = conn.execute(
+            """
+          WITH my_metric AS (SELECT * FROM episode_metrics WHERE metric = ?) 
           SELECT
             e.policy_key || ':v' || e.policy_version AS policy_uri, 
             e.eval_name, 
@@ -48,7 +75,9 @@ async def get_policy_evals() -> List[MatrixRow]:
           JOIN episode_info e 
           ON m.episode_id = e.episode_id 
           GROUP BY e.eval_name, e.policy_key, e.policy_version
-        """).fetchall()
+        """,
+            [metric],
+        ).fetchall()
 
         # Convert to list of MatrixRow objects
         matrix = [MatrixRow(policy_uri=row[0], eval_name=row[1], value=row[2], replay_url=row[3]) for row in result]
