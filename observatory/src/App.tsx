@@ -224,6 +224,19 @@ function App() {
       window.open(replay_url, '_blank');
     }
   };
+
+  const data: Plotly.Data = {
+    z,
+    x: sortedShortNames,
+    y: policies,
+    type: 'heatmap',
+    colorscale: 'Viridis',
+    colorbar: {
+      title: {
+        text: selectedMetric
+      }
+    }
+  }
   
   return (
     <div style={{ 
@@ -252,18 +265,14 @@ function App() {
         
         <div onMouseEnter={handleHeatmapEnter} onMouseLeave={handleHeatmapLeave}>
           <Plot
-            data={[{
-              z,
-              x: sortedShortNames,
-              y: policies,
-              type: 'heatmap',
-              colorscale: 'Viridis',
-              colorbar: {
-                title: selectedMetric
-              }
-            }]}
+            data={[data]}
             layout={{
-              title: `Policy Evaluation Report: ${selectedMetric}`,
+              title: {
+                text: `Policy Evaluation Report: ${selectedMetric}`,
+                font: {
+                  size: 24
+                }
+              },
               height: 600,
               width: 1000,
               margin: { t: 50, b: 150, l: 200, r: 50 },
