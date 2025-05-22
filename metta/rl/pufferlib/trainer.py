@@ -284,7 +284,7 @@ class PufferTrainer:
             stats_dir=Path(self.cfg.run_dir) / "stats",
         )
         result = sim.simulate()
-        stats_db = EvalStatsDB.from_sim_stats_db(result.stats_db)
+        stats_db = EvalStatsDB(result.stats_db)
 
         logger.info("Simulation complete")
 

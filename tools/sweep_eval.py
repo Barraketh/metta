@@ -91,7 +91,7 @@ def main(cfg: DictConfig | ListConfig) -> int:
 
         results = eval.simulate()
         eval_time = time.time() - eval_start_time
-        eval_stats_db = EvalStatsDB.from_sim_stats_db(results.stats_db)
+        eval_stats_db = EvalStatsDB(results.stats_db)
         eval_metric = eval_stats_db.get_average_metric_by_filter(cfg.metric, policy_pr)
 
         # Get training stats from metadata if available
