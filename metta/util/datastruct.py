@@ -1,7 +1,13 @@
+from typing import Any, Dict
+
 from omegaconf import DictConfig, ListConfig
 
 
-def flatten_config(obj, parent_key="", sep="."):
+def flatten_config(
+    obj: Any | DictConfig | ListConfig,
+    parent_key: str = "",
+    sep: str = ".",
+) -> Dict[str, Any]:
     """
     Recursively flatten a nested structure of DictConfig, ListConfig, dict, and list
     using dot notation, including indices for list items.

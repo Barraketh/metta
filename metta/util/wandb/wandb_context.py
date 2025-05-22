@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 import socket
+from types import TracebackType
 from typing import Annotated, Literal, Union, cast
 
 import pkg_resources
@@ -163,12 +164,17 @@ class WandbContext:
         return self.run
 
     @staticmethod
-    def cleanup_run(run: WandbRun | None):
+    def cleanup_run(run: WandbRun | None) -> None:
         if run:
             try:
                 wandb.finish()
             except Exception as e:
                 logger.error(f"Error during W&B cleanup: {str(e)}")
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self.cleanup_run(self.run)

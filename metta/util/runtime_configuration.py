@@ -3,6 +3,7 @@ import os
 import random
 import signal
 import warnings
+from typing import Any
 
 import numpy as np
 import torch
@@ -12,7 +13,7 @@ from rich import traceback
 logger = logging.getLogger("runtime_configuration")
 
 
-def seed_everything(seed, torch_deterministic):
+def seed_everything(seed: int | None, torch_deterministic: bool) -> None:
     random.seed(seed)
     np.random.seed(seed)
     if seed is not None:
@@ -21,7 +22,7 @@ def seed_everything(seed, torch_deterministic):
     torch.backends.cudnn.benchmark = True
 
 
-def setup_mettagrid_environment(cfg):
+def setup_mettagrid_environment(cfg: Any) -> None:
     # Import mettagrid_env to ensure OmegaConf resolvers are registered before Hydra loads
     import mettagrid.mettagrid_env  # noqa: F401
 

@@ -27,7 +27,7 @@ class ActionEmbedding(nn_layer_library.Embedding):
     is instantiated and never again. I.e., not when it is reloaded from a saved policy.
     """
 
-    def __init__(self, initialization="max_0_01", **cfg):
+    def __init__(self, initialization: str = "max_0_01", **cfg) -> None:
         super().__init__(**cfg)
         self._reserved_action_embeds = {}
         self.num_actions = 0
@@ -37,7 +37,7 @@ class ActionEmbedding(nn_layer_library.Embedding):
         self.initialization = initialization
         self.register_buffer("active_indices", torch.tensor([], dtype=torch.long))
 
-    def activate_actions(self, action_names, device):
+    def activate_actions(self, action_names: list[str], device: torch.device) -> None:
         """
         Updates the set of active action embeddings based on available actions.
 
@@ -60,7 +60,7 @@ class ActionEmbedding(nn_layer_library.Embedding):
         )
         self.num_actions = len(self.active_indices)
 
-    def _forward(self, td: TensorDict):
+    def _forward(self, td: TensorDict) -> TensorDict:
         B_TT = td["_BxTT_"]
         td["_num_actions_"] = self.num_actions
 

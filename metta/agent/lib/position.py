@@ -3,7 +3,7 @@ import math
 import torch
 
 
-def position_embeddings(width, height, embedding_dim=128):
+def position_embeddings(width: int, height: int, embedding_dim: int = 128) -> torch.Tensor:
     """
     Creates simple 2D position embeddings with x, y coordinates.
 
@@ -27,7 +27,9 @@ def position_embeddings(width, height, embedding_dim=128):
     return torch.stack((pos_x, pos_y), dim=-1)
 
 
-def sinusoidal_position_embeddings(width, height, embedding_dim=128):
+def sinusoidal_position_embeddings(
+    width: int, height: int, embedding_dim: int = 128
+) -> torch.Tensor:
     """
     Creates sinusoidal position embeddings for a 2D grid.
 

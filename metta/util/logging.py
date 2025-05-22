@@ -7,7 +7,7 @@ from loguru import logger
 from rich.logging import RichHandler
 
 
-def remap_io(logs_path: str):
+def remap_io(logs_path: str) -> None:
     os.makedirs(logs_path, exist_ok=True)
     stdout_log_path = os.path.join(logs_path, "out.log")
     stderr_log_path = os.path.join(logs_path, "error.log")
@@ -18,14 +18,14 @@ def remap_io(logs_path: str):
     logger.remove()
 
 
-def restore_io():
+def restore_io() -> None:
     sys.stderr = sys.__stderr__
     sys.stdout = sys.__stdout__
 
 
 # Create a custom formatter that supports milliseconds
 class MillisecondFormatter(logging.Formatter):
-    def formatTime(self, record, datefmt=None):
+    def formatTime(self, record: logging.LogRecord, datefmt: str | None = None) -> str:
         created = datetime.fromtimestamp(record.created)
         # Convert microseconds to milliseconds (keep only 3 digits)
         msec = created.microsecond // 1000
@@ -39,13 +39,13 @@ class MillisecondFormatter(logging.Formatter):
 
 # Create a custom handler that always shows the timestamp
 class AlwaysShowTimeRichHandler(RichHandler):
-    def emit(self, record):
+    def emit(self, record: logging.LogRecord) -> None:
         # Force a unique timestamp for each record
         record.created = record.created + (record.relativeCreated % 1000) / 1000000
         super().emit(record)
 
 
-def get_log_level(provided_level=None):
+def get_log_level(provided_level: str | None = None) -> str:
     """
     Determine log level based on priority:
     1. Environment variable LOG_LEVEL
@@ -65,7 +65,7 @@ def get_log_level(provided_level=None):
     return "INFO"
 
 
-def setup_mettagrid_logger(name: str, level=None) -> logging.Logger:
+def setup_mettagrid_logger(name: str, level: str | None = None) -> logging.Logger:
     # Get the appropriate log level based on priority
     log_level = get_log_level(level)
 
