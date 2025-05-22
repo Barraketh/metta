@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import Plot from 'react-plotly.js'
-import { getMetrics, getPolicyEvals, PolicyEval } from './data_loader'
+import { PolicyEvalMetric, loadDataFromUri, loadDataFromFile } from './data_loader'
+import { DataRepo, Repo } from './repo'
+
 // CSS for map viewer
 const MAP_VIEWER_CSS = `
 .map-viewer {
@@ -71,16 +73,25 @@ const MAP_VIEWER_CSS = `
 // Load data from API endpoints
 
 function App() {
+  // Data loading state
+  const [dataUri, setDataUri] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [matrix, setMatrix] = useState<PolicyEval[]>([])
+  const [fileError, setFileError] = useState<string | null>(null)
+  const [repo, setRepo] = useState<Repo | null>(null)
+
+  // Data state
+  const [matrix, setMatrix] = useState<PolicyEvalMetric[]>([])
   const [metrics, setMetrics] = useState<string[]>([])
+
+  // UI state
   const [selectedMetric, setSelectedMetric] = useState<string>("reward")
   const [selectedEval, setSelectedEval] = useState<string | null>(null)
   const [selectedReplayUrl, setSelectedReplayUrl] = useState<string | null>(null)
   const [isViewLocked, setIsViewLocked] = useState(false)
   const [isMouseOverMap, setIsMouseOverMap] = useState(false)
   const [isMouseOverHeatmap, setIsMouseOverHeatmap] = useState(false)
+  
   
   // Map image URL helper
   const getShortName = (evalName: string) => {
@@ -95,14 +106,23 @@ function App() {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const params = new URLSearchParams(window.location.search);
+    const dataUri = params.get('data');
+    if (dataUri) {
+      setDataUri(dataUri);
+    }
+  }, []);
+
+  useEffect(() => {
+    const loadData = async () => {
       try {
-        const [metricsData, matrixData] = await Promise.all([
-          getMetrics(),
-          getPolicyEvals(selectedMetric)
-        ]);
-        setMetrics(metricsData);
-        setMatrix(matrixData);
+        setLoading(true);
+        setError(null);
+
+        if (dataUri) {
+          const data = await loadDataFromUri(dataUri);
+          setRepo(new DataRepo(data));
+        }
         setLoading(false);
       } catch (err: any) {
         setError(err.message);
@@ -110,9 +130,99 @@ function App() {
       }
     };
 
-    fetchData();
-  }, [selectedMetric]);
-  
+    loadData();
+  }, [dataUri]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (repo) {
+        const [metricsData, matrixData] = await Promise.all([
+          repo.getMetrics(),
+          repo.getPolicyEvals(selectedMetric)
+        ]);
+        setMetrics(metricsData);
+        setMatrix(matrixData);
+      }
+    };
+
+    loadData();
+  }, [repo, selectedMetric]);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      setFileError(null);
+
+      const data = await loadDataFromFile(file);
+      setRepo(new DataRepo(data));
+      setLoading(false);
+    } catch (err: any) {
+      setFileError('Invalid file format. Please upload a valid JSON file.');
+      setLoading(false);
+    }
+  };
+
+  if (!dataUri) {
+    return (
+      <div style={{ 
+        fontFamily: 'Arial, sans-serif',
+        margin: 0,
+        padding: '20px',
+        background: '#f8f9fa',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{
+          maxWidth: '600px',
+          margin: '0 auto',
+          background: '#fff',
+          padding: '40px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 4px rgba(0,0,0,.1)',
+          textAlign: 'center'
+        }}>
+          <h1 style={{
+            color: '#333',
+            marginBottom: '20px'
+          }}>
+            Policy Evaluation Dashboard
+          </h1>
+          <p style={{ marginBottom: '20px', color: '#666' }}>
+            Upload your evaluation data or provide a data URI as a query parameter.
+          </p>
+          <div style={{ marginBottom: '20px' }}>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleFileUpload}
+              style={{
+                padding: '10px',
+                border: '2px dashed #ddd',
+                borderRadius: '4px',
+                width: '100%',
+                cursor: 'pointer'
+              }}
+            />
+          </div>
+          {fileError && (
+            <div style={{ color: 'red', marginTop: '10px' }}>
+              {fileError}
+            </div>
+          )}
+          <p style={{ color: '#666', fontSize: '14px' }}>
+            Or add <code>?data=YOUR_DATA_URI</code> to the URL
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return <div>Loading data...</div>
   }
