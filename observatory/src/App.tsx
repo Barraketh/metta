@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import Plot from 'react-plotly.js'
-import { getMetrics, getPolicyEvals } from './data_loader'
+import { getMetrics, getPolicyEvals, PolicyEval } from './data_loader'
 // CSS for map viewer
 const MAP_VIEWER_CSS = `
 .map-viewer {
@@ -68,20 +68,12 @@ const MAP_VIEWER_CSS = `
 }
 `;
 
-// Types
-interface MatrixRow {
-  policy_uri: string
-  eval_name: string
-  value: number
-  replay_url?: string
-}
-
 // Load data from API endpoints
 
 function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [matrix, setMatrix] = useState<MatrixRow[]>([])
+  const [matrix, setMatrix] = useState<PolicyEval[]>([])
   const [metrics, setMetrics] = useState<string[]>([])
   const [selectedMetric, setSelectedMetric] = useState<string>("reward")
   const [selectedEval, setSelectedEval] = useState<string | null>(null)
