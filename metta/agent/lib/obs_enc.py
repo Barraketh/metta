@@ -22,13 +22,14 @@ class ObsTokenShaper(LayerBase):
         self._value_dim = 1
         self._feat_dim = self._embed_dim + self._value_dim + 2 * self._coord_dim
         self.M = obs_shape[0]
+        self._token_dim = obs_shape[1]
 
     def _make_net(self) -> None:
         self._out_tensor_shape = [self.M, self._feat_dim]
 
         # Embedding layer for attribute indices. Index 0 is used for padding.
         # Max attribute index + 1 for padding idx 0
-        self._embeds = nn.Embedding(257, self._embed_dim, padding_idx=0)
+        self._embeds = nn.Embedding(257, self._embed_dim, padding_idx=0, sparse=True)
         nn.init.uniform_(self._embeds.weight, -0.1, 0.1)
         # Ensure padding_idx embedding is zeros
         self._embeds.weight.data[0].fill_(0)
@@ -48,10 +49,11 @@ class ObsTokenShaper(LayerBase):
         TT = 1
         td["_B_"] = B
         td["_TT_"] = TT
-        if len(observations.shape) > 3:
+        if observations.dim() != 3:  # hardcoding for shape [B, M, 3]
             TT = observations.shape[1]
             td["_TT_"] = TT
-            observations = einops.rearrange(observations, "b t h c -> (b t) h c")
+            # observations = einops.rearrange(observations, "b t h c -> (b t) h c")
+            observations = observations.flatten(0, 1)
         td["_BxTT_"] = B * TT
         # M = observations.shape[1]  # Max observations, not explicitly needed if using -1 or slicing
 
@@ -76,9 +78,18 @@ class ObsTokenShaper(LayerBase):
         # self._embeds.weight.data[0] is already zero due to padding_idx and manual setting
         atr_embeds = self._embeds(atr_indices)  # [B_TT, M, embed_dim]
 
-        # Concatenate to form feature vectors
-        # Feature vector: [atr_embeds, atr_values, x_coords, y_coords]
-        feat_vectors = torch.cat([atr_embeds, atr_values, x_coords, y_coords], dim=-1)  # [B_TT, M, feat_dim]
+        # Assemble feature vectors without an extra concat kernel.
+        feat_vectors = torch.empty(
+            (*atr_embeds.shape[:-1], self._feat_dim),
+            dtype=atr_embeds.dtype,
+            device=atr_embeds.device,
+        )
+        # Embedding portion
+        feat_vectors[..., : self._embed_dim] = atr_embeds
+        # Scalar features
+        feat_vectors[..., self._embed_dim] = atr_values.squeeze(-1)
+        feat_vectors[..., self._embed_dim + 1] = x_coords.squeeze(-1)
+        feat_vectors[..., self._embed_dim + 2] = y_coords.squeeze(-1)
 
         obs_mask = atr_indices == 0
 
