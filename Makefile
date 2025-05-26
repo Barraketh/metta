@@ -49,3 +49,7 @@ test-python: check-venv
 test: test-python
 
 all: clean install check-venv test
+
+lint-cpp: check-venv
+	@echo "Running cpplint via pytest"
+	pytest tests/lint/test_cpplint.py -q

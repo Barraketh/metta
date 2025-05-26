@@ -231,6 +231,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Python and uv
+        id: setup-python-uv
+        uses: ./.github/actions/setup-python-uv
+
       - name: Install C++ dependencies
         run: |
           sudo apt-get install -y g++ clang-format
@@ -241,6 +245,12 @@ jobs:
           find . -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" \) \
             -not -path "*/build/*" -not -path "*/venv/*" \
             -exec clang-format --dry-run --Werror {} +
+
+      - name: Run cpplint
+        run: |
+          echo "Running cpplint..."
+          find mettagrid -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.cxx" \) \
+            -not -path "*/third_party/*" | xargs cpplint --quiet
 
   test:
     name: "C++ Tests"
