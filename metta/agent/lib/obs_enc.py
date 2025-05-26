@@ -29,7 +29,7 @@ class ObsTokenShaper(LayerBase):
 
         # Embedding layer for attribute indices. Index 0 is used for padding.
         # Max attribute index + 1 for padding idx 0
-        self._embeds = nn.Embedding(257, self._embed_dim, padding_idx=0, sparse=True)
+        self._embeds = nn.Embedding(257, self._embed_dim, padding_idx=0)
         nn.init.uniform_(self._embeds.weight, -0.1, 0.1)
         # Ensure padding_idx embedding is zeros
         self._embeds.weight.data[0].fill_(0)
