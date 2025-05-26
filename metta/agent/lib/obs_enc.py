@@ -60,10 +60,11 @@ class ObsTokenShaper(LayerBase):
         # coords_byte contains x and y coordinates in a single byte
         coords_byte = observations[..., 0].to(torch.long)  # indices must be int64 for gather
 
-        # Gather normalized x and y coordinates from the lookup table
-        coords_norm = self.coords_lut[coords_byte]  # type: ignore[index]  # Shape: [B_TT, M, 2]
-        x_coords = coords_norm[..., 0:1]  # Shape: [B_TT, M, 1]
-        y_coords = coords_norm[..., 1:2]  # Shape: [B_TT, M, 1]
+        # Compute normalized x and y coordinates directly via bit-operations.
+        # This avoids a large gather from `coords_lut`, significantly reducing
+        # memory traffic and latency on CUDA.
+        x_coords = (((coords_byte >> 4) & 0x0F).unsqueeze(-1).float()) / 15.0  # Shape: [B_TT, M, 1]
+        y_coords = ((coords_byte & 0x0F).unsqueeze(-1).float()) / 15.0  # Shape: [B_TT, M, 1]
 
         # atr_indices are integers for embedding lookup
         atr_indices = observations[..., 1].long()  # Shape: [B_TT, M], ready for embedding
