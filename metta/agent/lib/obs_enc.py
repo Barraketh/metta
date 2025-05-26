@@ -48,12 +48,10 @@ class ObsTokenShaper(LayerBase):
         TT = 1
         td["_B_"] = B
         td["_TT_"] = TT
-        print(f"Shape of observations in rollout: {observations.shape}")
         if len(observations.shape) > 3:
             TT = observations.shape[1]
             td["_TT_"] = TT
             observations = einops.rearrange(observations, "b t h c -> (b t) h c")
-            print(f"Shape of observations after rearranging: {observations.shape}")
         td["_BxTT_"] = B * TT
         # M = observations.shape[1]  # Max observations, not explicitly needed if using -1 or slicing
 
