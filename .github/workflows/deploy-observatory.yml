@@ -23,7 +23,7 @@ jobs:
   deploy-observatory:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}/observatory
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -47,10 +47,15 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
+      - name: Create deployment directory
+        run: |
+          mkdir -p deploy/observatory
+          cp -r observatory/dist/* deploy/observatory/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./observatory/dist"
+          path: "./deploy"
 
       - name: Deploy to GitHub Pages
         id: deployment
