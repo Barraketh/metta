@@ -40,14 +40,12 @@ def numpy_compute_gae(dones, values, rewards, gamma, gae_lambda):
     return advantages
 
 
-# Fixtures for test parameters
 @pytest.fixture(scope="module")
 def gae_params():
     """Provides standard GAE hyperparameters."""
     return {"gamma": 0.99, "gae_lambda": 0.95}
 
 
-# Fixtures for test data
 @pytest.fixture(scope="function")
 def simple_trajectory():
     """Basic trajectory for testing GAE calculation."""
@@ -99,7 +97,6 @@ def mismatched_arrays():
     }
 
 
-# Benchmark fixtures with different sizes
 @pytest.fixture(scope="module")
 def make_trajectory():
     """Factory fixture to create trajectories of variable size."""
@@ -159,7 +156,6 @@ def realistic_rl_batch(gae_params):
     }
 
 
-# Basic test cases
 class TestComputeGAE:
     """Test suite for the compute_gae function."""
 
@@ -269,7 +265,6 @@ class TestComputeGAE:
             assert advantages[i] > advantages[i + 1] or np.isclose(advantages[i], advantages[i + 1])
 
 
-# Benchmarking cases
 @pytest.mark.benchmark
 class TestGAEBenchmarks:
     """Benchmark suite for GAE implementations."""

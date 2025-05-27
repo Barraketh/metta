@@ -3,31 +3,21 @@
 
 namespace py = pybind11;
 
-// Returns: advantages
 py::array_t<float> compute_gae(
-    // Binary flags indicating episode termination
-    // (1.0 for done, 0.0 for not done)
     py::array_t<float> dones,
-    // Value function estimates at each timestep
     py::array_t<float> values,
-    // Rewards at each timestep
     py::array_t<float> rewards,
-    // Discount factor
     float gamma,
-    // GAE lambda parameter for advantage estimation
     float gae_lambda) {
-  // Request contiguous buffers
   auto buf_dones = dones.unchecked<1>();
   auto buf_values = values.unchecked<1>();
   auto buf_rewards = rewards.unchecked<1>();
   ssize_t num_steps = buf_dones.shape(0);
 
-  // Input validation
   if (values.shape(0) != num_steps || rewards.shape(0) != num_steps) {
     throw std::runtime_error("Input arrays must have the same length");
   }
 
-  // Initialize advantage array
   auto advantages = py::array_t<float>({static_cast<ssize_t>(num_steps)}, {sizeof(float)});
   auto buf_adv = advantages.mutable_unchecked<1>();
 
@@ -42,11 +32,9 @@ py::array_t<float> compute_gae(
         buf_rewards(num_steps - 1) - buf_values(num_steps - 1);
   }
 
-  // Variables for calculation
   float lastgaelam = buf_adv(num_steps - 1);
   float nextnonterminal, delta;
 
-  // Calculate advantages in reverse order
   for (int t = num_steps - 2; t >= 0; --t) {
     nextnonterminal = 1.0f - buf_dones(t + 1);
     delta = buf_rewards(t) + gamma * buf_values(t + 1) * nextnonterminal -

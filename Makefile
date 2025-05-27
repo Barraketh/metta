@@ -1,7 +1,6 @@
 .PHONY: help all install test clean check-venv
 
 
-# Default target when just running 'make'
 help:
 	@echo "Available targets:"
 	@echo " install - Prepare the dev environment"
@@ -31,7 +30,6 @@ clean:
 	rm -rf ~/.cache/uv/builds-v0
 	@echo "(Metta) Clean completed successfully"
 
-# Install all project dependencies and external components
 install:
 	@echo "Running full devops/setup_build installation script..."
 	@bash devops/setup_build.sh

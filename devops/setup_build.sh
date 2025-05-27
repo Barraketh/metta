@@ -21,7 +21,6 @@ for arg in "$@"; do
   esac
 done
 
-# check if we're in docker
 if [ -f /.dockerenv ]; then
   export IS_DOCKER=1
 fi
@@ -73,7 +72,6 @@ fi
 
 VENV_PATH=".venv"
 
-# ========== CLEAN BUILD ==========
 if [ "$CLEAN" -eq 1 ]; then
 
   make clean
@@ -95,7 +93,6 @@ if [ "$CLEAN" -eq 1 ]; then
   fi
 fi
 
-# ========== CREATE VENV ==========
 # Check if we're already in a UV venv
 if ! is_uv_venv; then
   # Check if a virtual environment exists but is not activated
@@ -118,8 +115,6 @@ if ! is_uv_venv; then
   source "$VENV_PATH/bin/activate"
 fi
 
-# ========== BUILD AND INSTALL ==========
-
 echo -e "\nInstalling project requirements..."
 uv pip install -r requirements.txt
 
@@ -132,7 +127,6 @@ uv pip install -e .
 echo -e "\nInstalling MettaGrid..."
 uv pip --directory mettagrid install -e .
 
-# ========== SANITY CHECK ==========
 echo -e "\nSanity check: verifying all local deps are importable..."
 
 for dep in \
@@ -149,11 +143,9 @@ for dep in \
 done
 
 if [ -z "$CI" ] && [ -z "$IS_DOCKER" ]; then
-  # ========== INSTALL METTASCOPE ==========
   echo -e "\nSetting up MettaScope..."
   bash "mettascope/install.sh"
 
-  # ========== CHECK AWS TOKEN SETUP ==========
   echo -e "\nSetting up AWS access..."
   bash "devops/aws/setup_aws_profiles.sh"
 
