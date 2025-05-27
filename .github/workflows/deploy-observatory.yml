@@ -1,0 +1,57 @@
+name: "Deploy observatory to GitHub Pages"
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "observatory/**" # Run when any file in player directory changes
+      - ".github/workflows/**" # Run when workflow files change
+  workflow_dispatch: {} # Allow manual triggers
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Configure concurrency to always run
+concurrency:
+  group: pages-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-observatory:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Get all history to ensure we don't hit caching issues
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "observatory/package-lock.json"
+
+      - name: Install and build TypeScript
+        run: |
+          cd observatory
+          npm ci
+          npx tsc
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./observatory"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
