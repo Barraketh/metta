@@ -4,5 +4,9 @@ defaults:
   - _self_
 
 seed: null
+<<<<<<< HEAD
 run_id: 20250523.2
+=======
+run_id: 20250522.1
+>>>>>>> 95e65c0d (Adds new battery colors)
 run: ${oc.env:USER}.local.${run_id}
