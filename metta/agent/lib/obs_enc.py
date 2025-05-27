@@ -35,9 +35,9 @@ class ObsTokenShaper(LayerBase):
         self._embeds.weight.data[0].fill_(0)
 
         # Pre-compute coordinate lookup table to avoid bitwise ops every forward pass
-        coord_values = torch.arange(256)
-        coords_lut = torch.stack([(coord_values >> 4) & 0x0F, coord_values & 0x0F], dim=-1).float() / 15.0
-        self.register_buffer("coords_lut", coords_lut)
+        # coord_values = torch.arange(256)
+        # coords_lut = torch.stack([(coord_values >> 4) & 0x0F, coord_values & 0x0F], dim=-1).float() / 15.0
+        # self.register_buffer("coords_lut", coords_lut)
 
         return None
 
@@ -55,16 +55,12 @@ class ObsTokenShaper(LayerBase):
             # observations = einops.rearrange(observations, "b t h c -> (b t) h c")
             observations = observations.flatten(0, 1)
         td["_BxTT_"] = B * TT
-        # M = observations.shape[1]  # Max observations, not explicitly needed if using -1 or slicing
 
         # Extract components from observations
-        # observations shape: [B_TT, M, 3]
         # coords_byte contains x and y coordinates in a single byte
-        coords_byte = observations[..., 0].to(torch.long)  # indices must be int64 for gather
+        coords_byte = observations[..., 0].to(torch.uint8)
 
         # Compute normalized x and y coordinates directly via bit-operations.
-        # This avoids a large gather from `coords_lut`, significantly reducing
-        # memory traffic and latency on CUDA.
         x_coords = (((coords_byte >> 4) & 0x0F).unsqueeze(-1).float()) / 15.0  # Shape: [B_TT, M, 1]
         y_coords = ((coords_byte & 0x0F).unsqueeze(-1).float()) / 15.0  # Shape: [B_TT, M, 1]
 
@@ -78,7 +74,7 @@ class ObsTokenShaper(LayerBase):
         # self._embeds.weight.data[0] is already zero due to padding_idx and manual setting
         atr_embeds = self._embeds(atr_indices)  # [B_TT, M, embed_dim]
 
-        # Assemble feature vectors without an extra concat kernel.
+        # Assemble feature vectors
         feat_vectors = torch.empty(
             (*atr_embeds.shape[:-1], self._feat_dim),
             dtype=atr_embeds.dtype,
